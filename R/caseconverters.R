@@ -2,7 +2,7 @@
 #' 
 #' These functions allow you to parse and convert a string to a specific case.
 #'
-#' @param string A string.
+#' @param string A string (for example names of a data frame).
 #' @name caseconverter
 #' @return A character vector according the specified target case.
 #' 
@@ -16,7 +16,11 @@
 #' to_small_camel_case(strings)
 #' to_big_camel_case(strings)
 #' to_screaming_snake_case(strings)
+#' to_lower_upper_case(strings)
+#' to_upper_lower_case(strings)
 #' to_parsed_case(strings)
+#' to_mixed_case(strings)
+#' 
 #' 
 #' @importFrom magrittr "%>%"
 NULL
@@ -64,4 +68,68 @@ to_screaming_snake_case <- function(string){
 
 to_parsed_case <- function(string){
   to_parsed_case_internal(string)
+}
+
+#' @rdname caseconverter
+#' @export
+
+to_mixed_case <- function(string){
+  string <- to_parsed_case_internal(string)
+  string <- string %>% stringr::str_split("_")
+  string <- string %>% 
+    purrr::map(~stringr::str_c(stringr::str_sub(.x, 1, 1),
+                               stringr::str_sub(.x, 2) %>%
+                                 stringr::str_to_lower()))
+  string <- string %>% purrr::map_chr(~stringr::str_c(.x, collapse = "_"))
+  string
+}
+
+#' @rdname caseconverter
+#' @export
+
+to_lower_upper_case <- function(string){
+  string <- to_parsed_case_internal(string)
+  string <- string %>% stringr::str_split("_")
+  
+  relevant <- function(string){
+    relevant <- string %>% stringr::str_detect("[:alpha:]")
+    relevant[relevant] <- rep_len(c(TRUE, FALSE), sum(relevant))
+    relevant
+  }
+  
+  string[!is.na(string)] <- purrr::map2(string[!is.na(string)],
+                                        purrr::map(string[!is.na(string)],
+                                                   ~ relevant(.x)),
+                        # odds to lower
+                        ~{.x[.y] <- stringr::str_to_lower(.x[.y]);
+                        # others to upper
+                        .x[!.y] <- stringr::str_to_upper(.x[!.y]);
+                        .x}) 
+  string <- string %>% purrr::map_chr(stringr::str_c, collapse = "")
+  string
+}
+
+#' @rdname caseconverter
+#' @export
+
+to_upper_lower_case <- function(string){
+  string <- to_parsed_case_internal(string)
+  string <- string %>% stringr::str_split("_")
+  
+  relevant <- function(string){
+    relevant <- string %>% stringr::str_detect("[:alpha:]")
+    relevant[relevant] <- rep_len(c(TRUE, FALSE), sum(relevant))
+    relevant
+  }
+  
+  string[!is.na(string)] <- purrr::map2(string[!is.na(string)],
+                                        purrr::map(string[!is.na(string)],
+                                                   ~ relevant(.x)),
+                        # odds to upper
+                        ~{.x[.y] <- stringr::str_to_upper(.x[.y]);
+                        # others to lower
+                        .x[!.y] <- stringr::str_to_lower(.x[!.y]);
+                        .x}) 
+  string <- string %>% purrr::map_chr(stringr::str_c, collapse = "")
+  string
 }

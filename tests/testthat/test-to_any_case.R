@@ -14,8 +14,21 @@ test_that("examples", {
   
   expect_equal(to_any_case(examples, case = "screaming_snake"),
                cases[["screaming_snake_case"]])
+  
   expect_equal(to_any_case(examples, case = "parsed"),
              cases[["parsed_case"]])
+  
+  expect_equal(to_any_case("R.Studio", case = "big_camel", protect = "\\.", postprocess = "-"),
+               "R.Studio")
+  
+  expect_equal(to_any_case("HAMBURGcityGERUsa", case = "parsed", parsingoption = 3),
+               "HAMBURG_city_GERU_sa")
+  
+  expect_equal(to_any_case("HAMBURGcityGERUsa", case = "parsed", parsingoption = 4),
+               "HAMBURG_city_GER_Usa")
+  
+  expect_equal(to_any_case("HAMBURGcity", case = "parsed", parsingoption = 5),
+               "HAMBURGcity")
 }
 )
 
@@ -52,7 +65,103 @@ test_that("complex strings", {
                            protect = "\\.",
                            postprocess = "."),
                "merkwuerdiger.variablen.name.mit.vielen.mustern.version.3.7.4")
+  
+  expect_equal(to_any_case("R.Studio", case = "big_camel", protect = "\\."),
+               c("R.Studio"))
+  
+  expect_equal(to_any_case("R.Studio: v 1.0.143", case = "big_camel", preprocess = "\\.", postprocess = "_", protect = ":"),
+               "R_Studio:V_1_0_143")
+  
+  expect_equal(to_any_case("R.aStudio", case = "snake", protect = "\\.|A", postprocess = "-"), "r.a-studio")
+  expect_equal(to_any_case("R.aStudio", case = "snake", protect = "\\.|a", postprocess = "-"), "r.astudio")
+  expect_equal(to_any_case("R.aStudio", case = "big_camel", protect = "\\.|A", postprocess = "-"), "R.A-Studio")
+  expect_equal(to_any_case("R.aStudio", case = "big_camel", protect = "\\.|a", postprocess = "-"), "R.AStudio")
+  expect_equal(to_any_case("R.aStudio", case = "small_camel", protect = "\\.|A", postprocess = "-"), "r.A-Studio")
+  expect_equal(to_any_case("R.aStudio", case = "small_camel", protect = "\\.|a", postprocess = "-"), "r.AStudio")
+  expect_equal(to_any_case("r.aStudio", protect = "a", postprocess = "-", case = "big_camel"), "R-.AStudio")
+  
+  expect_equal(to_any_case("rStudio", case = "none", prefix = "rrr."),
+               "rrr.rStudio")
+  
+  expect_equal(to_any_case("Rstudio_STudio_sssTTT", case = "mixed"),
+               "Rstudio_S_Tudio_sss_Ttt")
+  expect_equal(to_any_case("Rstudio_STudio_sssTTT", case = "mixed", parsingoption = 2),
+               "Rstudio_St_udio_sss_Ttt")
+  
+  expect_equal(to_any_case(names(iris), case = "lower_upper", preprocess = "\\.", postprocess = "-"),
+               c("sepal-LENGTH", "sepal-WIDTH", "petal-LENGTH", "petal-WIDTH", "species"))
+  
+  expect_equal(to_any_case("R.aStudio", case = "lower_upper"),
+               "r.Astudio")
+  expect_equal(to_any_case("R.aStudio", case = "upper_lower"),
+               "R.aSTUDIO")
+  
+  expect_equal(to_any_case("R.aStudio", case = "lower_upper", protect = "\\."),
+               "r.Astudio")
+  expect_equal(to_any_case("R.aStudio", case = "lower_upper", protect = "\\.|a", postprocess = "-"),
+               "r.Astudio")
+  expect_equal(to_any_case("R.aStudio", case = "lower_upper", protect = "\\.|A", postprocess = "-"),
+               "r.A-studio")
+  
+  expect_equal(to_any_case("rstudio", case = "all_caps"),
+               "RSTUDIO")
+  expect_equal(to_any_case("rstudio", case = "upper_camel"),
+               "Rstudio")
+  expect_equal(to_any_case("rstudio", case = "lower_camel"),
+               "rstudio")
+  expect_equal(to_any_case("bla rstudio", case = "lower_camel"),
+               "blaRstudio")
+  
+  expect_equal(to_any_case("R.aStudio", case = "parsed", protect = "\\.|A", postprocess = "-"),
+               "R.a-Studio")
+  expect_equal(to_any_case("R.aStudio", case = "small_camel", protect = "\\.|A", postprocess = "-"),
+               "r.A-Studio")
+  expect_equal(to_any_case("R.aStudio", case = "big_camel", protect = "\\.|A", postprocess = "-"),
+               "R.A-Studio")
+  expect_equal(to_any_case("R.aStudio", case = "screaming_snake", protect = "\\.|A", postprocess = "-"),
+               "R.A-STUDIO")
+  expect_equal(to_any_case("R.aStudio", case = "lower_upper", protect = "\\.|A", postprocess = "-"),
+               "r.A-studio")
+  expect_equal(to_any_case("R.aStudio", case = "upper_lower", protect = "\\.|A", postprocess = "-"),
+               "R.a-STUDIO")
+  expect_equal(to_any_case("R.aStudio", case = "none", protect = "\\.|A", postprocess = "-"),
+               "R.aStudio")
+  expect_equal(to_any_case("R.aStudio", case = "mixed", protect = "\\.|A", postprocess = "-"),
+               "R.a-Studio")
+  
+  expect_equal(to_any_case(character(0), postprocess = "c"), "")
+  
+  expect_equal(to_any_case("fdf 1 2", protect = "\\d", case = "big_camel"),
+               "Fdf12")
+  
+  expect_equal(to_any_case("kleines Ha.schen", "screaming_snake", protect = "a"),
+               "KLEINES_HA._SCHEN")
+  
+  expect_equal(to_any_case("kleines Ha.schen", "screaming_snake", protect = "Ha"),
+               "KLEINESHA._SCHEN")
+  
+  expect_equal(to_any_case(c("R.aStudio", NA, NA, NA, NA), case = "upper_lower"),
+               c("R.aSTUDIO", NA, NA, NA, NA))
+  
+  expect_equal(to_any_case("ac\u00C4o", replace_special_characters = "Latin-ASCII"),
+               "ac_ao")
+  
+  expect_equal(to_any_case("ac\u00C4o", replace_special_characters = c("german", "Latin-ASCII")),
+               "ac_aeo")
+  
+  expect_equal(to_any_case("\u00E6", replace_special_characters = "Latin-ASCII"),
+                "ae")
+  
+  expect_equal(to_any_case("bla.bla", case = "none", preprocess = "\\."),
+               "bla_bla")
+  
+  # expect_equal(to_any_case(c(NA, NA, NA), "lower_upper"),
+  #              rep(NA_character_, 3))
+  # 
+  # expect_equal(to_any_case(c(NA, NA, NA), "upper_lower"),
+  #              rep(NA_character_, 3))
 })
+
 
 test_that("stackoverflow answers", {
   expect_equal(to_any_case(c("ThisText", "NextText"), case = "snake", postprocess = "\\."),
@@ -90,6 +199,23 @@ test_that("stackoverflow answers", {
                            preprocess = "\\."),
                c("ThisText", "NextText"))
 })
+
+test_that("parsing cases", {
+  expect_equal(to_any_case("RRRStudio", case = "parsed"), 
+               "RRR_Studio")
+  
+  expect_equal(to_any_case("RRRStudio", case = "parsed", parsingoption = 1), 
+               "RRR_Studio")
+
+  expect_equal(to_any_case("RRRStudio", case = "parsed", parsingoption = 2), 
+               "RRRS_tudio")
+  
+  expect_equal(check_design_rule("RRRStudio", parsingoption = 1),
+               TRUE)
+  
+  expect_equal(check_design_rule("RRRStudio", parsingoption = 2),
+               TRUE)
+  })
 
 test_that("expand.grid", {
   # string <- c(NA, "_", "s_na_k_er", "SNAKE SNAKE CASE", "snakeSnakECase",

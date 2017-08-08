@@ -7,6 +7,9 @@
 \alias{to_big_camel_case}
 \alias{to_screaming_snake_case}
 \alias{to_parsed_case}
+\alias{to_mixed_case}
+\alias{to_lower_upper_case}
+\alias{to_upper_lower_case}
 \title{Specific case converter shortcuts}
 \usage{
 to_snake_case(string)
@@ -18,9 +21,15 @@ to_big_camel_case(string)
 to_screaming_snake_case(string)
 
 to_parsed_case(string)
+
+to_mixed_case(string)
+
+to_lower_upper_case(string)
+
+to_upper_lower_case(string)
 }
 \arguments{
-\item{string}{A string.}
+\item{string}{A string (for example names of a data frame).}
 }
 \value{
 A character vector according the specified target case.
@@ -35,7 +44,11 @@ to_snake_case(strings)
 to_small_camel_case(strings)
 to_big_camel_case(strings)
 to_screaming_snake_case(strings)
+to_lower_upper_case(strings)
+to_upper_lower_case(strings)
 to_parsed_case(strings)
+to_mixed_case(strings)
+
 
 }
 \seealso{

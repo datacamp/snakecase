@@ -5,29 +5,60 @@
 \title{General case conversion}
 \usage{
 to_any_case(string, case = c("snake", "small_camel", "big_camel",
-  "screaming_snake", "parsed"), preprocess = NULL, protect = NULL,
-  replace_special_characters = FALSE, postprocess = NULL, prefix = "",
-  postfix = "", unique_sep = NULL, empty_fill = NULL)
+  "screaming_snake", "parsed", "mixed", "lower_upper", "upper_lower",
+  "all_caps", "lower_camel", "upper_camel", "none"), preprocess = NULL,
+  protect = NULL, replace_special_characters = NULL, postprocess = NULL,
+  prefix = "", postfix = "", unique_sep = NULL, empty_fill = NULL,
+  parsingoption = 1)
 }
 \arguments{
 \item{string}{A string (for example names of a data frame).}
 
-\item{case}{The desired target case, provided as one of \code{"snake"}, \code{"small_camel"}, \code{"big_camel"}, 
-\code{"screaming_snake"} or \code{"parsed"}. The latter one is not really a case, but is helpful since it
-returns the parsed input string, separated by underscores, without any further modification.}
+\item{case}{The desired target case, provided as one of the following:
+\itemize{
+ \item{snake_case: \code{"snake"}}
+ \item{lowerCamel: \code{"lower_camel"} or \code{"small_camel"}}
+ \item{UpperCamel: \code{"upper_camel"} or \code{"big_camel"}}
+ \item{ALL_CAPS: \code{"screaming_snake"} or \code{"all_caps"}}
+ \item{lowerUPPER: \code{"lower_upper"}}
+ \item{UPPERlower: \code{"upper_lower"}}
+ }
 
-\item{preprocess}{String that will be wrapped internally into \code{stringr::regex()}. 
-All matches will be treated as additional splitting parameters besides the default ones 
-(\code{"_"} and \code{" "}), when parsing the input string.}
+ There are three "special" cases available:
+\itemize{
+ \item{\code{"parsed"}: This case is underlying all other cases. 
+ Every substring a string consists
+ of becomes surrounded by an underscore (depending on the \code{parsingoption}).
+  Underscores at the start and end are trimmed. No lower or 
+ upper case pattern from the input string are changed.}
+ \item{\code{"mixed"}: Almost the same as \code{case = "parsed"}. Every letter which is not at the start
+ or behind an underscore is turned into lowercase.}
+ \item{\code{"none"}: Neither parsing nor casec onversion occur. This case might be helpful, when
+ one wants to call the function for the quick usage of the other parameters.
+ Works with \code{preprocess}, \code{replace_special_characters}, \code{prefix},
+  \code{postfix},
+  \code{empty_fill} and \code{unique_sep}.}
+ }}
 
-\item{protect}{A string which is a valid \code{stringr::regex()}. Matches within the output
-won't have any "_" (or artifacts of \code{preprocess}) beside. Note that \code{preprocess} has a higher precedence than protect, 
+\item{preprocess}{A string (if not \code{NULL}) that will be wrapped internally
+into \code{stringr::regex()}. All matches will be replaced by underscores.}
+
+\item{protect}{A string (if not \code{NULL}) which is a valid \code{stringr::regex()}. Matches within the input
+won't have any "_" beside within the output.
+Note that \code{preprocess} has a higher precedence than protect, 
 which means that it doesn't make sense to protect sth. which is already replaced
 via \code{preprocess}.}
 
-\item{replace_special_characters}{Logical, if \code{TRUE}, special characters 
-will be translated to characters which are more likely to be understood by 
-different programs. For example german umlauts will be translated to ae, oe, ue etc.}
+\item{replace_special_characters}{A character vector (if not \code{NULL}). The entries of this argument
+need to be elements of \code{stringi::stri_trans_list()} or names of lookup tables (currently
+only "german" is supported). In the order of the entries the letters of the input
+ string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
+ matches of the lookup table.
+
+You should use this feature with care in case of \code{case = "parsed"} and 
+\code{case = "none"}, since for upper case letters, which have transliterations/replacements
+ of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
+ might not always be what is intended.}
 
 \item{postprocess}{String that will be used as separator. The defaults are \code{"_"} 
 and \code{""}, regarding the specified \code{case}.}
@@ -36,11 +67,22 @@ and \code{""}, regarding the specified \code{case}.}
 
 \item{postfix}{postfix (string).}
 
-\item{unique_sep}{A string. If it is supplied, then duplicated names will get a suffix integer
-in the order of their appearance. The suffix is separated by the supplied string to this argument.}
+\item{unique_sep}{A string. If not \code{NULL}, then duplicated names will get 
+a suffix integer
+in the order of their appearance. The suffix is separated by the supplied string
+ to this argument.}
 
 \item{empty_fill}{A string. If it is supplied, then each entry that matches "" will be replaced
 by the supplied string to this argument.}
+
+\item{parsingoption}{An integer that will determine the parsingoption.
+#' \itemize{
+ \item{1: \code{RRRStudio -> RRR_Studio}}
+ \item{2: \code{RRRStudio -> RRRS_tudio}}
+ \item{3: parses at the beginning like option 1 and the rest like option 2.}
+ \item{4: parses at the beginning like option 2 and the rest like option 1.}
+ \item{any other integer: no parsing"}
+ }}
 }
 \value{
 A character vector according the specified parameters above.
@@ -53,34 +95,50 @@ Function to convert strings to any case
 \code{postprocess} might follow in the future.
 }
 \examples{
-### Default usage
+### Cases
 strings <- c("this Is a Strange_string", "AND THIS ANOTHER_One")
 to_any_case(strings, case = "snake")
-to_any_case(strings, case = "small_camel")
-to_any_case(strings, case = "big_camel")
-to_any_case(strings, case = "screaming_snake")
+to_any_case(strings, case = "lower_camel")
+to_any_case(strings, case = "upper_camel")
+to_any_case(strings, case = "all_caps")
+to_any_case(strings, case = "lower_upper")
+to_any_case(strings, case = "upper_lower")
 to_any_case(strings, case = "parsed")
+to_any_case(strings, case = "mixed")
+to_any_case(strings, case = "none")
 
-### Pre -and postprocessing
+### Parsing options
+# the default option makes no sense in this setting
+to_any_case("HAMBURGcity", case = "parsed", parsingoption = 1)
+# so the second parsing option is the way to address this example
+to_any_case("HAMBURGcity", case = "parsed", parsingoption = 2)
+# one can also parse the beginning like parsingoption 1 and the rest like option 2
+to_any_case("HAMBURGcityGERUsa", case = "parsed", parsingoption = 3)
+# or starting like parsingoption 2 and for the rest switch to option 1
+to_any_case("HAMBURGcityGERUsa", case = "parsed", parsingoption = 4)
+# there might be reasons to suppress the parsing, while choosing neither one or two
+to_any_case("HAMBURGcity", case = "parsed", parsingoption = 5)
+
+### Preprocess & protect
+string <- "R.St\\u00FCdio: v.1.0.143"
+to_any_case(string)
+to_any_case(string, case = "snake", preprocess = ":|\\\\.")
+to_any_case(string, case = "snake", protect = ":|\\\\.")
+to_any_case(string, case = "snake",
+            preprocess = ":|(?<!\\\\d)\\\\.",
+            protect = "\\\\.")
+
+### Replace special characters
+to_any_case("\\u00E4ngstlicher Has\\u00EA", replace_special_characters = c("german", "Latin-ASCII"))
+
+### Postprocess
 strings2 <- c("this - Is_-: a Strange_string", "AND THIS ANOTHER_One")
-to_snake_case(strings2)
-to_any_case(strings2, case = "snake", preprocess = "-|\\\\:")
-
 to_any_case(strings2, case = "snake", preprocess = "-|\\\\:", postprocess = " ")
 to_any_case(strings2, case = "big_camel", preprocess = "-|\\\\:", postprocess = "//")
 
 ### Pre -and postfix
 to_any_case(strings2, case = "big_camel", preprocess = "-|\\\\:", postprocess = "//",
             prefix = "USER://", postfix = ".exe")
-
-### Special characters like german umlauts for example can be replaced via 
-# replace_special_characters = TRUE
-
-### Protect anything that shouldn't have an underscore beside in the output
-strings3 <- c("var12", "var1.2", "va.r.1.2")
-to_any_case(strings3, case = "snake")
-to_any_case(strings3, case = "snake", protect = "\\\\d")
-to_any_case(strings3, case = "snake", protect = "\\\\d|\\\\.")
 
 }
 \seealso{

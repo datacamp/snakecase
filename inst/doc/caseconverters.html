@@ -12,7 +12,7 @@
 
 <meta name="author" content="Malte Grosser" />
 
-<meta name="date" content="2017-05-18" />
+<meta name="date" content="2017-08-08" />
 
 <title>Case converters</title>
 
@@ -70,11 +70,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Case converters</h1>
 <h4 class="author"><em>Malte Grosser</em></h4>
-<h4 class="date"><em>2017-05-18</em></h4>
+<h4 class="date"><em>2017-08-08</em></h4>
 
 
 
-<p>The snakecase package contains five specific case converter functions and one more general high level function with added functionality.</p>
+<p>The snakecase package contains eight specific case converter functions and one more general high level function with added functionality.</p>
 <div id="specific-case-converters" class="section level2">
 <h2>Specific case converters</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># devtools::install_github(&quot;Tazinho/snakecase&quot;)</span>
@@ -94,7 +94,16 @@ strings &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st"
 ## [1] &quot;ThisIsAStrangeString&quot; &quot;AndThisAnotherOne&quot;
 
 <span class="kw">to_screaming_snake_case</span>(strings)
-## [1] &quot;THIS_IS_A_STRANGE_STRING&quot; &quot;AND_THIS_ANOTHER_ONE&quot;</code></pre></div>
+## [1] &quot;THIS_IS_A_STRANGE_STRING&quot; &quot;AND_THIS_ANOTHER_ONE&quot;
+
+<span class="kw">to_lower_upper_case</span>(strings)
+## [1] &quot;thisISaSTRANGEstring&quot; &quot;andTHISanotherONE&quot;
+
+<span class="kw">to_lower_upper_case</span>(strings)
+## [1] &quot;thisISaSTRANGEstring&quot; &quot;andTHISanotherONE&quot;
+
+<span class="kw">to_mixed_case</span>(strings)
+## [1] &quot;this_Is_a_Strange_string&quot; &quot;And_This_Another_One&quot;</code></pre></div>
 </div>
 <div id="highlevel-case-converter" class="section level2">
 <h2>Highlevel case converter</h2>
@@ -114,7 +123,19 @@ strings &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st"
 ## [1] &quot;ThisIsAStrangeString&quot; &quot;AndThisAnotherOne&quot;
 
 <span class="kw">to_any_case</span>(strings, <span class="dt">case =</span> <span class="st">&quot;screaming_snake&quot;</span>)
-## [1] &quot;THIS_IS_A_STRANGE_STRING&quot; &quot;AND_THIS_ANOTHER_ONE&quot;</code></pre></div>
+## [1] &quot;THIS_IS_A_STRANGE_STRING&quot; &quot;AND_THIS_ANOTHER_ONE&quot;
+
+<span class="kw">to_any_case</span>(strings, <span class="dt">case =</span> <span class="st">&quot;lower_upper&quot;</span>)
+## [1] &quot;thisISaSTRANGEstring&quot; &quot;andTHISanotherONE&quot;
+
+<span class="kw">to_any_case</span>(strings, <span class="dt">case =</span> <span class="st">&quot;upper_lower&quot;</span>)
+## [1] &quot;THISisAstrangeSTRING&quot; &quot;ANDthisANOTHERone&quot;
+
+<span class="kw">to_any_case</span>(strings, <span class="dt">case =</span> <span class="st">&quot;mixed&quot;</span>)
+## [1] &quot;this_Is_a_Strange_string&quot; &quot;And_This_Another_One&quot;
+
+<span class="kw">to_any_case</span>(strings, <span class="dt">case =</span> <span class="st">&quot;none&quot;</span>)
+## [1] &quot;this Is a Strange_string&quot; &quot;AND THIS ANOTHER_One&quot;</code></pre></div>
 </div>
 <div id="pre--and-postprocessing" class="section level3">
 <h3>Pre -and postprocessing</h3>
@@ -143,10 +164,11 @@ strings &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st"
 </div>
 <div id="special-characters" class="section level3">
 <h3>Special characters</h3>
-<p>If you have problems with special characters on your platform, you can replace them via <code>replace_special_characters = TRUE</code>:</p>
+<p>If you have problems with special characters on your platform, you can replace them via <code>replace_special_characters = c(&quot;germany&quot;, &quot;Latin-ASCII&quot;)</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">strings3 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ßüss üß ä stränge sträng&quot;</span>, <span class="st">&quot;unrealistisch aber nützich&quot;)</span>
 
-<span class="st">to_any_case(strings3, case = &quot;</span>screaming_snake<span class="st">&quot;, replace_special_characters = TRUE)</span>
+<span class="st">to_any_case(strings3, case = &quot;</span>screaming_snake<span class="st">&quot;, </span>
+<span class="st">            replace_special_characters = c(&quot;</span>germany<span class="st">&quot;, &quot;</span>Latin<span class="op">-</span>ASCII<span class="st">&quot;))</span>
 <span class="st">## [1] &quot;</span>SSUESS_UESS_AE_STRAENGE_STRAENG<span class="st">&quot; &quot;</span>UNREALISTISCH_ABER_NUETZICH<span class="st">&quot;</span></code></pre></div>
 </div>
 <div id="protect-anything" class="section level3">

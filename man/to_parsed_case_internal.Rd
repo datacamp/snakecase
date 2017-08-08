@@ -2,21 +2,27 @@
 % Please edit documentation in R/to_parsed_case_internal.R
 \name{to_parsed_case_internal}
 \alias{to_parsed_case_internal}
-\title{Functions to convert column names to snake_case}
+\title{Internal parser, which is relevant for preprocessing, parsing and parsingoptions}
 \usage{
-to_parsed_case_internal(string, preprocess = NULL)
+to_parsed_case_internal(string, parsingoption = 1L)
 }
 \arguments{
 \item{string}{A string.}
 
-\item{preprocess}{Character string that will be wrapped internally into stringr::regex. 
-All matches will be padded with underscores.}
+\item{parsingoption}{An integer that will determine the parsingoption.
+\itemize{
+ \item{1: \code{RRRStudio -> RRR_Studio}}
+ \item{2: \code{RRRStudio -> RRRS_tudio}}
+ \item{3: parses at the beginning like option 1 and the rest like option 2.}
+ \item{4: parses at the beginning like option 2 and the rest like option 1.}
+ \item{any other integer: no parsing"}
+ }}
 }
 \value{
 A character vector separated by underscores, containing the parsed string.
 }
 \description{
-Functions to convert column names to snake_case
+Internal parser, which is relevant for preprocessing, parsing and parsingoptions
 }
 \author{
 Malte Grosser, \email{malte.grosser@gmail.com}
