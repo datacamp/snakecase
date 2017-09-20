@@ -22,7 +22,7 @@
 #'  upper case pattern from the input string are changed.}
 #'  \item{\code{"mixed"}: Almost the same as \code{case = "parsed"}. Every letter which is not at the start
 #'  or behind an underscore is turned into lowercase.}
-#'  \item{\code{"none"}: Neither parsing nor casec onversion occur. This case might be helpful, when
+#'  \item{\code{"none"}: Neither parsing nor case conversion occur. This case might be helpful, when
 #'  one wants to call the function for the quick usage of the other parameters.
 #'  Works with \code{preprocess}, \code{replace_special_characters}, \code{prefix},
 #'   \code{postfix},
@@ -142,6 +142,9 @@ to_any_case <- function(string,
                         empty_fill = NULL,
                         parsingoption = 1){
   case <- match.arg(case)
+### ____________________________________________________________________________
+### save names-attribute
+  string_names <- names(string)
 ### ____________________________________________________________________________
 ### helper for "lower_upper", "upper_lower"
   # this helper returns a logical vector with TRUE for the first and every
@@ -286,6 +289,9 @@ to_any_case <- function(string,
 ### ____________________________________________________________________________
 ### pre and postfix
   string <- stringr::str_c(prefix, string, postfix)
+### ____________________________________________________________________________
+### set back names-attribute
+  names(string) <- string_names
 ### ____________________________________________________________________________
 ### return
   string

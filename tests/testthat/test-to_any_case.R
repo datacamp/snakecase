@@ -32,6 +32,156 @@ test_that("examples", {
 }
 )
 
+test_that("preserve-names-attribute", {
+  
+  labs <- c(a = "abcDEF", b = "bbccEE", c = "TeESt it")
+  
+  expect_equal(
+    to_any_case(labs, case = "snake"),
+    structure(c("abc_def", "bbcc_ee", "te_e_st_it"), .Names = c("a", "b", "c"))
+    )
+  
+  expect_equal(
+    to_any_case(labs, case = "upper_camel"),
+    structure(c("AbcDef", "BbccEe", "TeEStIt"), .Names = c("a", "b", "c"))
+    )
+  
+  expect_equal(
+    to_any_case(labs, case = "lower_camel"),
+    structure(c("abcDef", "bbccEe", "teEStIt"), .Names = c("a", "b", "c"))
+    )
+  
+  expect_equal(
+    to_any_case(labs, case = "parsed"),
+    structure(c("abc_DEF", "bbcc_EE", "Te_E_St_it"), .Names = c("a", "b", "c"))
+  )
+  
+  expect_equal(
+    to_any_case(labs, case = "mixed"),
+    structure(c("abc_Def", "bbcc_Ee", "Te_E_St_it"), .Names = c("a", "b", "c"))
+  )
+  
+  expect_equal(
+    to_any_case(labs, case = "none"),
+    structure(c("abcDEF", "bbccEE", "TeESt it"), .Names = c("a", "b", "c"))
+    )
+  
+  expect_equal(
+    to_any_case(labs, case = "all_caps"),
+    structure(c("ABC_DEF", "BBCC_EE", "TE_E_ST_IT"), .Names = c("a", "b", "c"))
+    )
+  
+  expect_equal(
+    to_any_case(labs, case = "upper_lower"),
+    structure(c("ABCdef", "BBCCee", "TEeSTit"), .Names = c("a", "b", "c"))
+    )
+  
+  expect_equal(
+    to_any_case(labs, case = "lower_upper"),
+    structure(c("abcDEF", "bbccEE", "teEstIT"), .Names = c("a", "b", "c"))
+    )
+})
+
+test_that("janitor-pkg-tests",{
+  clean_names3 <- function(old_names, case = "snake"){
+    new_names <- old_names %>%
+      gsub("'", "", .) %>% # remove quotation marks
+      gsub("\"", "", .) %>% # remove quotation marks
+      gsub("%", ".percent_", .) %>%
+      gsub("^[ ]+", "", .) %>%
+      make.names(.) %>%
+      to_any_case(case = case, preprocess = "\\.", 
+                  replace_special_characters = c("Latin-ASCII"))
+    # Handle duplicated names - they mess up dplyr pipelines
+    # This appends the column number to repeated instances of duplicate variable names
+    dupe_count <- vapply(1:length(new_names), function(i) { 
+      sum(new_names[i] == new_names[1:i]) }, integer(1))
+    
+    new_names[dupe_count > 1] <- paste(new_names[dupe_count > 1],
+                                       dupe_count[dupe_count > 1],
+                                       sep = "_")
+    new_names
+  }
+  
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+                 "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                 "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143")),
+               c("sp_ace", "repeated", "a", "percent", "x", "x_2", "d_9", "repeated_2", 
+                 "cant", "hi_there", "leading_spaces", "x_3", "acao", "faroe", 
+                 "r_studio_v_1_0_143"))
+  
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+                              "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                              "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
+                            case = "parsed"),
+               c("sp_ace", "repeated", "a", "percent", "X", "X_2", "d_9", "REPEATED", 
+                 "cant", "hi_there", "leading_spaces", "X_3", "acao", "faroe", 
+                 "r_studio_v_1_0_143"))
+  
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+                              "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                              "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
+                            case = "screaming_snake"),
+               c("SP_ACE", "REPEATED", "A", "PERCENT", "X", "X_2", "D_9", "REPEATED_2", 
+                 "CANT", "HI_THERE", "LEADING_SPACES", "X_3", "ACAO", "FAROE", 
+                 "R_STUDIO_V_1_0_143")
+  )
+  
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+                              "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                              "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
+                            case = "small_camel"),
+               c("spAce", "repeated", "a", "percent", "x", "x_2", "d9", "repeated_2", 
+                 "cant", "hiThere", "leadingSpaces", "x_3", "acao", "faroe", "rStudioV1_0_143"
+               )
+  )
+  
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+                              "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                              "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
+                            case = "big_camel"),
+               c("SpAce", "Repeated", "A", "Percent", "X", "X_2", "D9", "Repeated_2", 
+                 "Cant", "HiThere", "LeadingSpaces", "X_3", "Acao", "Faroe", "RStudioV1_0_143"
+               )
+  )
+  
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+                              "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                              "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
+                            case = "lower_upper"),
+               c("spACE", "repeated", "a", "percent", "x", "x_2", "d9", "repeated_2", 
+                 "cant", "hiTHERE", "leadingSPACES", "x_3", "acao", "faroe", "rSTUDIOv10143"
+               )
+  )
+  
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+                              "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                              "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
+                            case = "upper_lower"),
+               c("SPace", "REPEATED", "A", "PERCENT", "X", "X_2", "D9", "REPEATED_2", 
+                 "CANT", "HIthere", "LEADINGspaces", "X_3", "ACAO", "FAROE", "RstudioV10143"
+               )
+  )
+  
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+                              "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                              "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
+                            case = "mixed"),
+               c("sp_ace", "repeated", "a", "percent", "X", "X_2", "d_9", "Repeated", 
+                 "cant", "hi_there", "leading_spaces", "X_3", "acao", "faroe", 
+                 "r_studio_v_1_0_143")
+  )
+  
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+                              "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                              "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
+                            case = "none"),
+               c("sp_ace", "repeated", "a____", "_percent_", "X_", "X__2", "d___9", 
+                 "REPEATED", "cant", "hi__there_", "leading_spaces", "X__3", "acao", 
+                 "faroe", "r_studio_v_1_0_143")
+  )
+})
+
 # test_that("rules",{
 #   examples <- cases[["examples"]]
 #   

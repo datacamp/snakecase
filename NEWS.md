@@ -1,3 +1,13 @@
+# snakecase 0.5.1
+
+* Changes since last update:
+    * `to_any_case()` and shortcuts (`to_xxx_case()` functions) preserve name attribute now
+    * R dependency lowered to 3.1
+
+# snakecase 0.5.0.9001
+
+* `to_any_case()` and the other converter function now preserve the names attribute. (Thanks to @straegejacke)
+
 # snakecase 0.5.0
 
 * CRAN update
