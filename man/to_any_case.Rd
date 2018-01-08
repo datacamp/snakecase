@@ -7,9 +7,10 @@
 to_any_case(string, case = c("snake", "small_camel", "big_camel",
   "screaming_snake", "parsed", "mixed", "lower_upper", "upper_lower",
   "all_caps", "lower_camel", "upper_camel", "none"), preprocess = NULL,
-  protect = NULL, replace_special_characters = NULL, postprocess = NULL,
-  prefix = "", postfix = "", unique_sep = NULL, empty_fill = NULL,
-  parsingoption = 1)
+  protect = "_(?![:alnum:])|(?<![:alnum:])_",
+  replace_special_characters = NULL, postprocess = NULL, prefix = "",
+  postfix = "", unique_sep = NULL, empty_fill = NULL,
+  parsing_option = 1, abbreviations = NULL)
 }
 \arguments{
 \item{string}{A string (for example names of a data frame).}
@@ -19,7 +20,7 @@ to_any_case(string, case = c("snake", "small_camel", "big_camel",
  \item{snake_case: \code{"snake"}}
  \item{lowerCamel: \code{"lower_camel"} or \code{"small_camel"}}
  \item{UpperCamel: \code{"upper_camel"} or \code{"big_camel"}}
- \item{ALL_CAPS: \code{"screaming_snake"} or \code{"all_caps"}}
+ \item{ALL_CAPS: \code{"all_caps"} or \code{"screaming_snake"}}
  \item{lowerUPPER: \code{"lower_upper"}}
  \item{UPPERlower: \code{"upper_lower"}}
  }
@@ -28,29 +29,29 @@ to_any_case(string, case = c("snake", "small_camel", "big_camel",
 \itemize{
  \item{\code{"parsed"}: This case is underlying all other cases. 
  Every substring a string consists
- of becomes surrounded by an underscore (depending on the \code{parsingoption}).
+ of becomes surrounded by an underscore (depending on the \code{parsing_option}).
   Underscores at the start and end are trimmed. No lower or 
  upper case pattern from the input string are changed.}
  \item{\code{"mixed"}: Almost the same as \code{case = "parsed"}. Every letter which is not at the start
- or behind an underscore is turned into lowercase.}
+ or behind an underscore is turned into lowercase. If a substring is set as an abbreviation, it will stay in upper case.}
  \item{\code{"none"}: Neither parsing nor case conversion occur. This case might be helpful, when
  one wants to call the function for the quick usage of the other parameters.
- Works with \code{preprocess}, \code{replace_special_characters}, \code{prefix},
+ Works with \code{preprocess}, \code{replace_special_characters}, \code{postprocess}, \code{prefix},
   \code{postfix},
   \code{empty_fill} and \code{unique_sep}.}
  }}
 
 \item{preprocess}{A string (if not \code{NULL}) that will be wrapped internally
-into \code{stringr::regex()}. All matches will be replaced by underscores.}
+into \code{stringr::regex()}. All matches will be replaced by underscores. Underscores can later turned into another separator via \code{postprocess}.}
 
-\item{protect}{A string (if not \code{NULL}) which is a valid \code{stringr::regex()}. Matches within the input
-won't have any "_" beside within the output.
-Note that \code{preprocess} has a higher precedence than protect, 
-which means that it doesn't make sense to protect sth. which is already replaced
-via \code{preprocess}.}
+\item{protect}{A string (default: \code{"_(?![:alnum:])|(?<![:alnum:])_"}).
+Every internal match to the supplied regular expression won't have an output separator
+around (in older versions conversions like "sepal_._length" occured by default).
+This argument should usually never be used anymore. Hence, it will be removed in one of the following versions.
+If you need to make usage of this argument in your code, pls drop me an email, so that I can see if there might be a better solution.}
 
 \item{replace_special_characters}{A character vector (if not \code{NULL}). The entries of this argument
-need to be elements of \code{stringi::stri_trans_list()} or names of lookup tables (currently
+need to be elements of \code{stringi::stri_trans_list()} (like "Latin-ASCII", which is often useful) or names of lookup tables (currently
 only "german" is supported). In the order of the entries the letters of the input
  string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
  matches of the lookup table.
@@ -75,14 +76,20 @@ in the order of their appearance. The suffix is separated by the supplied string
 \item{empty_fill}{A string. If it is supplied, then each entry that matches "" will be replaced
 by the supplied string to this argument.}
 
-\item{parsingoption}{An integer that will determine the parsingoption.
+\item{parsing_option}{An integer that will determine the parsing_option.
 #' \itemize{
  \item{1: \code{RRRStudio -> RRR_Studio}}
  \item{2: \code{RRRStudio -> RRRS_tudio}}
  \item{3: parses at the beginning like option 1 and the rest like option 2.}
  \item{4: parses at the beginning like option 2 and the rest like option 1.}
- \item{any other integer: no parsing"}
+ \item{5: parses like option 1 but suppresses "_" around non special characters.
+ In this way case conversion won't apply after these characters. See examples.}
+ \item{any other integer <= 0: no parsing"}
  }}
+
+\item{abbreviations}{character with (uppercase) abbreviations. This marks
+abbreviations with an underscore behind (in front of the parsing).
+useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2.}
 }
 \value{
 A character vector according the specified parameters above.
@@ -98,9 +105,9 @@ Function to convert strings to any case
 ### Cases
 strings <- c("this Is a Strange_string", "AND THIS ANOTHER_One")
 to_any_case(strings, case = "snake")
-to_any_case(strings, case = "lower_camel")
-to_any_case(strings, case = "upper_camel")
-to_any_case(strings, case = "all_caps")
+to_any_case(strings, case = "lower_camel") # same as "small_camel"
+to_any_case(strings, case = "upper_camel") # same as "big_camel"
+to_any_case(strings, case = "all_caps") # same as "screaming_snake"
 to_any_case(strings, case = "lower_upper")
 to_any_case(strings, case = "upper_lower")
 to_any_case(strings, case = "parsed")
@@ -109,24 +116,29 @@ to_any_case(strings, case = "none")
 
 ### Parsing options
 # the default option makes no sense in this setting
-to_any_case("HAMBURGcity", case = "parsed", parsingoption = 1)
+to_any_case("HAMBURGcity", case = "parsed", parsing_option = 1)
 # so the second parsing option is the way to address this example
-to_any_case("HAMBURGcity", case = "parsed", parsingoption = 2)
-# one can also parse the beginning like parsingoption 1 and the rest like option 2
-to_any_case("HAMBURGcityGERUsa", case = "parsed", parsingoption = 3)
-# or starting like parsingoption 2 and for the rest switch to option 1
-to_any_case("HAMBURGcityGERUsa", case = "parsed", parsingoption = 4)
+to_any_case("HAMBURGcity", case = "parsed", parsing_option = 2)
+# one can also parse the beginning like parsing_option 1 and the rest like option 2
+to_any_case("HAMBURGcityGERUsa", case = "parsed", parsing_option = 3)
+# or starting like parsing_option 2 and for the rest switch to option 1
+to_any_case("HAMBURGcityGERUsa", case = "parsed", parsing_option = 4)
+# By default (option 1) characters are converted after non alpha numeric characters.
+# This option (5) suppresses this behaviour
+to_any_case("blaBla.bla", case = "big_camel", parsing_option = 5)
 # there might be reasons to suppress the parsing, while choosing neither one or two
-to_any_case("HAMBURGcity", case = "parsed", parsingoption = 5)
 
-### Preprocess & protect
+to_any_case("HAMBURGcity", case = "parsed", parsing_option = 0)
+
+### Abbreviations
+to_any_case(c("RSSfeedRSSfeed", "USPassport", "USpassport"), abbreviations = c("RSS", "US"))
+
+### Preprocess
 string <- "R.St\\u00FCdio: v.1.0.143"
 to_any_case(string)
 to_any_case(string, case = "snake", preprocess = ":|\\\\.")
-to_any_case(string, case = "snake", protect = ":|\\\\.")
 to_any_case(string, case = "snake",
-            preprocess = ":|(?<!\\\\d)\\\\.",
-            protect = "\\\\.")
+            preprocess = ":|(?<!\\\\d)\\\\.")
 
 ### Replace special characters
 to_any_case("\\u00E4ngstlicher Has\\u00EA", replace_special_characters = c("german", "Latin-ASCII"))

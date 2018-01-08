@@ -2,27 +2,29 @@
 % Please edit documentation in R/to_parsed_case_internal.R
 \name{to_parsed_case_internal}
 \alias{to_parsed_case_internal}
-\title{Internal parser, which is relevant for preprocessing, parsing and parsingoptions}
+\title{Internal parser, which is relevant for preprocessing, parsing and parsing options}
 \usage{
-to_parsed_case_internal(string, parsingoption = 1L)
+to_parsed_case_internal(string, parsing_option = 1L)
 }
 \arguments{
 \item{string}{A string.}
 
-\item{parsingoption}{An integer that will determine the parsingoption.
+\item{parsing_option}{An integer that will determine the parsing option.
 \itemize{
  \item{1: \code{RRRStudio -> RRR_Studio}}
  \item{2: \code{RRRStudio -> RRRS_tudio}}
  \item{3: parses at the beginning like option 1 and the rest like option 2.}
  \item{4: parses at the beginning like option 2 and the rest like option 1.}
- \item{any other integer: no parsing"}
+ \item{5: parses like option 1 but suppresses "_" around non alpha-numeric characters.
+ In this way this option suppresses splits and resulting case conversion after these characters.}
+ \item{any other integer <= 0: no parsing"}
  }}
 }
 \value{
 A character vector separated by underscores, containing the parsed string.
 }
 \description{
-Internal parser, which is relevant for preprocessing, parsing and parsingoptions
+Internal parser, which is relevant for preprocessing, parsing and parsing options
 }
 \author{
 Malte Grosser, \email{malte.grosser@gmail.com}

@@ -1,8 +1,55 @@
 #' Specific case converter shortcuts
 #' 
-#' These functions allow you to parse and convert a string to a specific case.
+#' Wrappers around \code{to_any_case()}
 #'
 #' @param string A string (for example names of a data frame).
+#'  
+#' @param preprocess A string (if not \code{NULL}) that will be wrapped internally
+#' into \code{stringr::regex()}. All matches will be replaced by underscores. Underscores can later turned into another separator via \code{postprocess}.
+#' 
+#' @param replace_special_characters A character vector (if not \code{NULL}). The entries of this argument
+#' need to be elements of \code{stringi::stri_trans_list()} (like "Latin-ASCII", which is often useful) or names of lookup tables (currently
+#' only "german" is supported). In the order of the entries the letters of the input
+#'  string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
+#'  matches of the lookup table.
+#' 
+#' You should use this feature with care in case of \code{case = "parsed"} and 
+#' \code{case = "none"}, since for upper case letters, which have transliterations/replacements
+#'  of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
+#'  might not always be what is intended.
+#' 
+#' @param postprocess String that will be used as separator. The defaults are \code{"_"} 
+#' and \code{""}, regarding the specified \code{case}.
+#' @param prefix prefix (string).
+#' @param postfix postfix (string).
+#' @param empty_fill A string. If it is supplied, then each entry that matches "" will be replaced
+#' by the supplied string to this argument.
+#' @param unique_sep A string. If not \code{NULL}, then duplicated names will get 
+#' a suffix integer
+#' in the order of their appearance. The suffix is separated by the supplied string
+#'  to this argument.
+#' @param parsing_option An integer that will determine the parsing_option.
+#' #' \itemize{
+#'  \item{1: \code{RRRStudio -> RRR_Studio}}
+#'  \item{2: \code{RRRStudio -> RRRS_tudio}}
+#'  \item{3: parses at the beginning like option 1 and the rest like option 2.}
+#'  \item{4: parses at the beginning like option 2 and the rest like option 1.}
+#'  \item{5: parses like option 1 but suppresses "_" around non special characters.
+#'  In this way case conversion won't apply after these characters. See examples.}
+#'  \item{any other integer <= 0: no parsing"}
+#'  }
+#'  
+#' @param abbreviations character with (uppercase) abbreviations. This marks
+#'  abbreviations with an underscore behind (in front of the parsing).
+#'  useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2.
+#' 
+#' @return A character vector according the specified parameters above.
+#'
+#' @note caseconverters are vectorised over \code{postprocess}, \code{prefix} and \code{postfix}.
+#' \code{postprocess} might follow in the future.
+#' @author Malte Grosser, \email{malte.grosser@@gmail.com}
+#' @keywords utilities
+#' 
 #' @name caseconverter
 #' @return A character vector according the specified target case.
 #' 
@@ -13,8 +60,8 @@
 #' strings <- c("this Is a Strange_string", "AND THIS ANOTHER_One", NA)
 #' 
 #' to_snake_case(strings)
-#' to_small_camel_case(strings)
-#' to_big_camel_case(strings)
+#' to_lower_camel_case(strings)
+#' to_upper_camel_case(strings)
 #' to_screaming_snake_case(strings)
 #' to_lower_upper_case(strings)
 #' to_upper_lower_case(strings)
@@ -29,136 +76,215 @@ NULL
 #' @seealso \href{https://github.com/Tazinho/snakecase}{snakecase on github}, \code{\link{to_any_case}} for flexible high level conversion.
 #' @export
 
-to_snake_case <- function(string){
-  # save names-attribute
-  string_names <- names(string)
-  string <- to_parsed_case_internal(string) %>% 
-    purrr::map_chr(stringr::str_to_lower)
-  names(string) <- string_names
-  string
+to_snake_case <- function(string,
+                          preprocess = NULL,
+                          replace_special_characters = NULL,
+                          postprocess = NULL,
+                          prefix = "",
+                          postfix = "",
+                          unique_sep = NULL,
+                          empty_fill = NULL,
+                          parsing_option = 1,
+                          abbreviations = NULL){
+  to_any_case(string = string,
+              case = "snake",
+              preprocess = preprocess,
+              protect = "_(?![:alnum:])|(?<![:alnum:])_",
+              replace_special_characters = replace_special_characters,
+              postprocess = postprocess,
+              prefix = prefix,
+              postfix = postfix,
+              unique_sep = unique_sep,
+              empty_fill = empty_fill,
+              parsing_option = parsing_option,
+              abbreviations = abbreviations)
 }
 
 #' @rdname caseconverter
 #' @export
 
-to_small_camel_case <- function(string){
-  # save names-attribute
-  out_names <- names(string)
-  out <- to_big_camel_case(string)
-  out <- stringr::str_c(stringr::str_sub(out, 1, 1) %>% stringr::str_to_lower(),
-                        stringr::str_sub(out, 2))
-  names(out) <- out_names
-  out
+to_lower_camel_case <- function(string,
+                                preprocess = NULL,
+                                replace_special_characters = NULL,
+                                postprocess = NULL,
+                                prefix = "",
+                                postfix = "",
+                                unique_sep = NULL,
+                                empty_fill = NULL,
+                                parsing_option = 1,
+                                abbreviations = NULL){
+  to_any_case(string = string,
+              case = "lower_camel",
+              preprocess = preprocess,
+              protect = "_(?![:alnum:])|(?<![:alnum:])_",
+              replace_special_characters = replace_special_characters,
+              postprocess = postprocess,
+              prefix = prefix,
+              postfix = postfix,
+              unique_sep = unique_sep,
+              empty_fill = empty_fill,
+              parsing_option = parsing_option,
+              abbreviations = abbreviations)
 }
 
 #' @rdname caseconverter
 #' @export
 
-to_big_camel_case <- function(string){
-  # save names-attribute
-  string_names <- names(string)
-  string <- to_parsed_case_internal(string) %>% 
-    purrr::map_chr(stringr::str_to_lower) %>% 
-    stringr::str_split("(?<!\\d)_|_(?!\\d)") %>% 
-    purrr::map(stringr::str_to_title) %>% 
-    purrr::map_chr(stringr::str_c, collapse = "")
-  names(string) <- string_names
-  string
+to_upper_camel_case <- function(string,
+                              preprocess = NULL,
+                              replace_special_characters = NULL,
+                              postprocess = NULL,
+                              prefix = "",
+                              postfix = "",
+                              unique_sep = NULL,
+                              empty_fill = NULL,
+                              parsing_option = 1,
+                              abbreviations = NULL){
+  to_any_case(string = string,
+              case = "upper_camel",
+              preprocess = preprocess,
+              protect = "_(?![:alnum:])|(?<![:alnum:])_",
+              replace_special_characters = replace_special_characters,
+              postprocess = postprocess,
+              prefix = prefix,
+              postfix = postfix,
+              unique_sep = unique_sep,
+              empty_fill = empty_fill,
+              parsing_option = parsing_option,
+              abbreviations = abbreviations)
 }
 
 #' @rdname caseconverter
 #' @export 
 
-to_screaming_snake_case <- function(string){
-  # save names-attribute
-  string_names <- names(string)
-  string <- to_parsed_case_internal(string) %>%
-    stringr::str_to_upper()
-  names(string) <- string_names
-  string
+to_screaming_snake_case <- function(string,
+                                    preprocess = NULL,
+                                    replace_special_characters = NULL,
+                                    postprocess = NULL,
+                                    prefix = "",
+                                    postfix = "",
+                                    unique_sep = NULL,
+                                    empty_fill = NULL,
+                                    parsing_option = 1,
+                                    abbreviations = NULL){
+  to_any_case(string = string,
+              case = "screaming_snake",
+              preprocess = preprocess,
+              protect = "_(?![:alnum:])|(?<![:alnum:])_",
+              replace_special_characters = replace_special_characters,
+              postprocess = postprocess,
+              prefix = prefix,
+              postfix = postfix,
+              unique_sep = unique_sep,
+              empty_fill = empty_fill,
+              parsing_option = parsing_option,
+              abbreviations = abbreviations)
 }
 
 #' @rdname caseconverter
 #' @export
 
-to_parsed_case <- function(string){
-  # save names-attribute
-  string_names <- names(string)
-  string <- to_parsed_case_internal(string)
-  names(string) <- string_names
-  string
+to_parsed_case <- function(string,
+                           preprocess = NULL,
+                           replace_special_characters = NULL,
+                           postprocess = NULL,
+                           prefix = "",
+                           postfix = "",
+                           unique_sep = NULL,
+                           empty_fill = NULL,
+                           parsing_option = 1,
+                           abbreviations = NULL){
+  to_any_case(string = string,
+              case = "parsed",
+              preprocess = preprocess,
+              protect = "_(?![:alnum:])|(?<![:alnum:])_",
+              replace_special_characters = replace_special_characters,
+              postprocess = postprocess,
+              prefix = prefix,
+              postfix = postfix,
+              unique_sep = unique_sep,
+              empty_fill = empty_fill,
+              parsing_option = parsing_option,
+              abbreviations = abbreviations)
 }
 
 #' @rdname caseconverter
 #' @export
 
-to_mixed_case <- function(string){
-  # save names-attribute
-  string_names <- names(string)
-  string <- to_parsed_case_internal(string)
-  string <- string %>% stringr::str_split("_")
-  string <- string %>% 
-    purrr::map(~stringr::str_c(stringr::str_sub(.x, 1, 1),
-                               stringr::str_sub(.x, 2) %>%
-                                 stringr::str_to_lower()))
-  string <- string %>% purrr::map_chr(~stringr::str_c(.x, collapse = "_"))
-  names(string) <- string_names
-  string
+to_mixed_case <- function(string,
+                          preprocess = NULL,
+                          replace_special_characters = NULL,
+                          postprocess = NULL,
+                          prefix = "",
+                          postfix = "",
+                          unique_sep = NULL,
+                          empty_fill = NULL,
+                          parsing_option = 1,
+                          abbreviations = NULL){
+  to_any_case(string = string,
+              case = "mixed",
+              preprocess = preprocess,
+              protect = "_(?![:alnum:])|(?<![:alnum:])_",
+              replace_special_characters = replace_special_characters,
+              postprocess = postprocess,
+              prefix = prefix,
+              postfix = postfix,
+              unique_sep = unique_sep,
+              empty_fill = empty_fill,
+              parsing_option = parsing_option,
+              abbreviations = abbreviations)
 }
 
 #' @rdname caseconverter
 #' @export
 
-to_lower_upper_case <- function(string){
-  # save names-attribute
-  string_names <- names(string)
-  string <- to_parsed_case_internal(string)
-  string <- string %>% stringr::str_split("_")
-  
-  relevant <- function(string){
-    relevant <- string %>% stringr::str_detect("[:alpha:]")
-    relevant[relevant] <- rep_len(c(TRUE, FALSE), sum(relevant))
-    relevant
-  }
-  
-  string[!is.na(string)] <- purrr::map2(string[!is.na(string)],
-                                        purrr::map(string[!is.na(string)],
-                                                   ~ relevant(.x)),
-                        # odds to lower
-                        ~{.x[.y] <- stringr::str_to_lower(.x[.y]);
-                        # others to upper
-                        .x[!.y] <- stringr::str_to_upper(.x[!.y]);
-                        .x}) 
-  string <- string %>% purrr::map_chr(stringr::str_c, collapse = "")
-  names(string) <- string_names
-  string
+to_lower_upper_case <- function(string,
+                                preprocess = NULL,
+                                replace_special_characters = NULL,
+                                postprocess = NULL,
+                                prefix = "",
+                                postfix = "",
+                                unique_sep = NULL,
+                                empty_fill = NULL,
+                                parsing_option = 1,
+                                abbreviations = NULL){
+  to_any_case(string = string,
+              case = "lower_upper",
+              preprocess = preprocess,
+              protect = "_(?![:alnum:])|(?<![:alnum:])_",
+              replace_special_characters = replace_special_characters,
+              postprocess = postprocess,
+              prefix = prefix,
+              postfix = postfix,
+              unique_sep = unique_sep,
+              empty_fill = empty_fill,
+              parsing_option = parsing_option,
+              abbreviations = abbreviations)
 }
 
 #' @rdname caseconverter
 #' @export
 
-to_upper_lower_case <- function(string){
-  # save names-attribute
-  string_names <- names(string)
-  
-  string <- to_parsed_case_internal(string)
-  string <- string %>% stringr::str_split("_")
-  
-  relevant <- function(string){
-    relevant <- string %>% stringr::str_detect("[:alpha:]")
-    relevant[relevant] <- rep_len(c(TRUE, FALSE), sum(relevant))
-    relevant
-  }
-  
-  string[!is.na(string)] <- purrr::map2(string[!is.na(string)],
-                                        purrr::map(string[!is.na(string)],
-                                                   ~ relevant(.x)),
-                        # odds to upper
-                        ~{.x[.y] <- stringr::str_to_upper(.x[.y]);
-                        # others to lower
-                        .x[!.y] <- stringr::str_to_lower(.x[!.y]);
-                        .x}) 
-  string <- string %>% purrr::map_chr(stringr::str_c, collapse = "")
-  names(string) <- string_names
-  string
+to_upper_lower_case <- function(string,
+                                preprocess = NULL,
+                                replace_special_characters = NULL,
+                                postprocess = NULL,
+                                prefix = "",
+                                postfix = "",
+                                unique_sep = NULL,
+                                empty_fill = NULL,
+                                parsing_option = 1,
+                                abbreviations = NULL){
+  to_any_case(string = string,
+              case = "upper_lower",
+              preprocess = preprocess,
+              protect = "_(?![:alnum:])|(?<![:alnum:])_",
+              replace_special_characters = replace_special_characters,
+              postprocess = postprocess,
+              prefix = prefix,
+              postfix = postfix,
+              unique_sep = unique_sep,
+              empty_fill = empty_fill,
+              parsing_option = parsing_option,
+              abbreviations = abbreviations)
 }
