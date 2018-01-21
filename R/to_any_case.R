@@ -3,6 +3,7 @@
 #' Function to convert strings to any case
 #'
 #' @param string A string (for example names of a data frame).
+#' 
 #' @param case The desired target case, provided as one of the following:
 #' \itemize{
 #'  \item{snake_case: \code{"snake"}}
@@ -13,7 +14,7 @@
 #'  \item{UPPERlower: \code{"upper_lower"}}
 #'  }
 #'
-#'  There are three "special" cases available:
+#'  There are four "special" cases available:
 #' \itemize{
 #'  \item{\code{"parsed"}: This case is underlying all other cases. 
 #'  Every substring a string consists
@@ -24,43 +25,25 @@
 #'  or behind an underscore is turned into lowercase. If a substring is set as an abbreviation, it will stay in upper case.}
 #'  \item{\code{"none"}: Neither parsing nor case conversion occur. This case might be helpful, when
 #'  one wants to call the function for the quick usage of the other parameters.
-#'  Works with \code{preprocess}, \code{replace_special_characters}, \code{postprocess}, \code{prefix},
+#'  Works with \code{sep_in}, \code{transliterations}, \code{sep_out}, \code{prefix},
 #'   \code{postfix},
 #'   \code{empty_fill} and \code{unique_sep}.}
+#'  \item{\code{"internal_parsing"}: This case is returning the internal parsing
+#'  (suppressing the internal protection mechanism), which means that alphanumeric characters will be surrounded by underscores.
+#'  It should only be used in very rare usecases and is mainly implemented to showcase the internal workings of \code{to_any_case()}}
 #'  }
+#' 
+#' @param abbreviations character with (uppercase) abbreviations. This marks
+#'  abbreviations with an underscore behind (in front of the parsing).
+#'  useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2.
 #'  
-#' @param preprocess A string (if not \code{NULL}) that will be wrapped internally
+#' @param sep_in (short for separator input) A regex supplied as a character (if not \code{NULL}), which will be wrapped internally
 #' into \code{stringr::regex()}. All matches will be replaced by underscores. Underscores can later turned into another separator via \code{postprocess}.
 #' 
-#' @param protect A string (default: \code{"_(?![:alnum:])|(?<![:alnum:])_"}).
-#' Every internal match to the supplied regular expression won't have an output separator
-#' around (in older versions conversions like "sepal_._length" occured by default).
-#' This argument should usually never be used anymore. Hence, it will be removed in one of the following versions.
-#' If you need to make usage of this argument in your code, pls drop me an email, so that I can see if there might be a better solution.
+#' @param preprocess deprecated. Pls use \code{sep_in} instead.
 #' 
-#' @param replace_special_characters A character vector (if not \code{NULL}). The entries of this argument
-#' need to be elements of \code{stringi::stri_trans_list()} (like "Latin-ASCII", which is often useful) or names of lookup tables (currently
-#' only "german" is supported). In the order of the entries the letters of the input
-#'  string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
-#'  matches of the lookup table.
-#' 
-#' You should use this feature with care in case of \code{case = "parsed"} and 
-#' \code{case = "none"}, since for upper case letters, which have transliterations/replacements
-#'  of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
-#'  might not always be what is intended.
-#' 
-#' @param postprocess String that will be used as separator. The defaults are \code{"_"} 
-#' and \code{""}, regarding the specified \code{case}.
-#' @param prefix prefix (string).
-#' @param postfix postfix (string).
-#' @param empty_fill A string. If it is supplied, then each entry that matches "" will be replaced
-#' by the supplied string to this argument.
-#' @param unique_sep A string. If not \code{NULL}, then duplicated names will get 
-#' a suffix integer
-#' in the order of their appearance. The suffix is separated by the supplied string
-#'  to this argument.
 #' @param parsing_option An integer that will determine the parsing_option.
-#' #' \itemize{
+#' \itemize{
 #'  \item{1: \code{RRRStudio -> RRR_Studio}}
 #'  \item{2: \code{RRRStudio -> RRRS_tudio}}
 #'  \item{3: parses at the beginning like option 1 and the rest like option 2.}
@@ -69,15 +52,42 @@
 #'  In this way case conversion won't apply after these characters. See examples.}
 #'  \item{any other integer <= 0: no parsing"}
 #'  }
+#'
+#' @param transliterations A character vector (if not \code{NULL}). The entries of this argument
+#' need to be elements of \code{stringi::stri_trans_list()} (like "Latin-ASCII", which is often useful) or names of lookup tables (currently
+#' only "german" is supported). In the order of the entries the letters of the input
+#'  string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
+#'  matches of the lookup table.
 #'  
-#' @param abbreviations character with (uppercase) abbreviations. This marks
-#'  abbreviations with an underscore behind (in front of the parsing).
-#'  useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2.
+#' You should use this feature with care in case of \code{case = "parsed"} and 
+#' \code{case = "none"}, since for upper case letters, which have transliterations/replacements
+#'  of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
+#'  might not always be what is intended.
 #' 
+#' @param replace_special_characters deprecated. Pls use \code{transliterations} instead.
+#' 
+#' @param sep_out (short for separator output) String that will be used as separator. The defaults are \code{"_"} 
+#' and \code{""}, regarding the specified \code{case}.
+#' 
+#' @param postprocess deprecated. Pls use \code{sep_out} instead.
+#' 
+#' @param unique_sep A string. If not \code{NULL}, then duplicated names will get 
+#' a suffix integer
+#' in the order of their appearance. The suffix is separated by the supplied string
+#'  to this argument.
+#' 
+#' @param empty_fill A string. If it is supplied, then each entry that matches "" will be replaced
+#' by the supplied string to this argument.
+#' 
+#' @param prefix prefix (string).
+#'
+#' @param postfix postfix (string).
+#'
 #' @return A character vector according the specified parameters above.
 #'
-#' @note \code{to_any_case()} is vectorised over \code{postprocess}, \code{prefix} and \code{postfix}.
-#' \code{postprocess} might follow in the future.
+#' @note \code{to_any_case()} is vectorised over \code{string}, \code{sep_in}, \code{sep_out},
+#'  \code{empty_fill}, \code{prefix} and \code{postfix}.
+#'  
 #' @author Malte Grosser, \email{malte.grosser@@gmail.com}
 #' @keywords utilities
 #'
@@ -92,6 +102,7 @@
 #' to_any_case(strings, case = "upper_lower")
 #' to_any_case(strings, case = "parsed")
 #' to_any_case(strings, case = "mixed")
+#' to_any_case(strings, case = "internal_parsing")
 #' to_any_case(strings, case = "none")
 #' 
 #' ### Parsing options
@@ -113,15 +124,15 @@
 #' ### Abbreviations
 #' to_any_case(c("RSSfeedRSSfeed", "USPassport", "USpassport"), abbreviations = c("RSS", "US"))
 #' 
-#' ### Preprocess
+#' ### Separator input
 #' string <- "R.St\u00FCdio: v.1.0.143"
 #' to_any_case(string)
 #' to_any_case(string, case = "snake", preprocess = ":|\\.")
 #' to_any_case(string, case = "snake",
 #'             preprocess = ":|(?<!\\d)\\.")
 #' 
-#' ### Replace special characters
-#' to_any_case("\u00E4ngstlicher Has\u00EA", replace_special_characters = c("german", "Latin-ASCII"))
+#' ### Transliterations
+#' to_any_case("\u00E4ngstlicher Has\u00EA", transliterations = c("german", "Latin-ASCII"))
 #' 
 #' ### Postprocess
 #' strings2 <- c("this - Is_-: a Strange_string", "AND THIS ANOTHER_One")
@@ -142,22 +153,43 @@
 to_any_case <- function(string,
                         case = c("snake", "small_camel", "big_camel", "screaming_snake", 
                                  "parsed", "mixed", "lower_upper", "upper_lower",
-                                 "all_caps", "lower_camel", "upper_camel", "none"),
+                                 "all_caps", "lower_camel", "upper_camel", "internal_parsing", "none"),
+                        abbreviations = NULL,
+                        sep_in = NULL,
                         preprocess = NULL,
-                        protect = "_(?![:alnum:])|(?<![:alnum:])_",
+                        parsing_option = 1,
+                        transliterations = NULL,
                         replace_special_characters = NULL,
+                        sep_out = NULL,
                         postprocess = NULL,
-                        prefix = "",
-                        postfix = "",
                         unique_sep = NULL,
                         empty_fill = NULL,
-                        parsing_option = 1,
-                        abbreviations = NULL){
+                        prefix = "",
+                        postfix = ""){
   ### Deprecations:
-  if (!identical(protect,"_(?![:alnum:])|(?<![:alnum:])_")) {
-    warning("argument protect is deprecated; If you really need this argument, pls submit an issue on https://github.com/Tazinho/snakecase", 
-              call. = FALSE)
+  if (!identical(preprocess, NULL)) {
+    warning("argument preprocess is renamed to sep_in and will be removed in later versions",
+            call. = FALSE)
+    if (identical(sep_in, NULL)) {
+      sep_in = preprocess
     }
+  }
+  
+  if (!identical(postprocess, NULL)) {
+    warning("argument postprocess is renamed to sep_out and will be removed in later versions",
+            call. = FALSE)
+    if (identical(sep_out, NULL)) {
+      sep_out = postprocess
+    }
+  }
+  
+  if (!identical(replace_special_characters, NULL)) {
+    warning("argument replace_special_characters is renamed to transliterations and will be removed in later versions",
+            call. = FALSE)
+    if (identical(transliterations, NULL)) {
+      transliterations = replace_special_characters
+    }
+  }
   ### Argument matching and checking
   case <- match.arg(case)
 ### check input length (necessary for NULL and atomic(0))
@@ -186,7 +218,7 @@ to_any_case <- function(string,
   string <- abbreviation_internal(string, abbreviations)
 ### ____________________________________________________________________________
 ### preprocess (regex into "_") and parsing (surrounding by "_")
-  string <- preprocess_internal(string, preprocess)
+  string <- preprocess_internal(string, sep_in)
   
   if (case != "none"){
     string <- to_parsed_case_internal(string,
@@ -212,9 +244,9 @@ to_any_case <- function(string,
         stringr::str_split(pattern = "(?<!\\d)_|_(?!\\d)")
     }
 ### replacement of special characters_------------------------------------------
-    if(!is.null(replace_special_characters)){
+    if(!is.null(transliterations)){
       string <- string %>%
-        purrr::map(~replace_special_characters_internal(.x, replace_special_characters, case))
+        purrr::map(~replace_special_characters_internal(.x, transliterations, case))
     }
 ### caseconversion--------------------------------------------------------------
     if(case == "mixed"){
@@ -242,7 +274,10 @@ to_any_case <- function(string,
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     if(case == "small_camel"){
       string <- string %>% purrr::map(stringr::str_to_lower)
-      string <- string %>% purrr::map(stringr::str_to_title)
+      string <- string %>% 
+        purrr::map(~ stringr::str_c(stringr::str_sub(.x, 1, 1) %>%
+                                      stringr::str_to_upper(),
+                                    stringr::str_sub(.x, 2)))
       string <- string %>%
         purrr::map_chr(stringr::str_c, collapse = " ") %>% 
         purrr::map_chr(~ stringr::str_c(stringr::str_sub(.x, 1, 1) %>%
@@ -284,25 +319,25 @@ to_any_case <- function(string,
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     # Protect (only internal, not via an argument).
     # Replace all "_" by "" which are around a not alphanumeric character
-    if (!is.null(protect)){
-      string <- stringr::str_replace_all(string, protect, "")
+    if (case != "internal_parsing"){
+      string <- stringr::str_replace_all(string, "_(?![:alnum:])|(?<![:alnum:])_", "")
     }
 ### ----------------------------------------------------------------------------
 }
-### postprocessing--------------------------------------------------------------
-    if(!is.null(postprocess) & !identical(string, character(0))){
+### postprocessing (ouput separator)s--------------------------------------------
+    if(!is.null(sep_out) & !identical(string, character(0))){
       string <- purrr::map2_chr(string,
-                                postprocess,
+                                sep_out,
                                 ~ stringr::str_replace_all(.x, "_", .y))}
     
-    if(is.null(postprocess) & case %in% c("small_camel", "big_camel", 
+    if(is.null(sep_out) & case %in% c("small_camel", "big_camel", 
                                             "lower_upper", "upper_lower")){
       string <- stringr::str_replace_all(string, "(?<!\\d)_|_(?!\\d)", "")
     }
 ### ____________________________________________________________________________
 ### "none"
-  if(case == "none" & !is.null(replace_special_characters)){
-    string <- replace_special_characters_internal(string, replace_special_characters)
+  if(case == "none" & !is.null(transliterations)){
+    string <- replace_special_characters_internal(string, transliterations)
   }
 ### ____________________________________________________________________________
 ### fill empty strings

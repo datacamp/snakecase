@@ -24,29 +24,29 @@ Dots and other special characters may have a special intention
 to_any_case("malte.grosser@gmail.com")
 ```
 
-When it is clear that they are separators, you can supply them as a regex to the `preprocess` argument
+When it is clear that they are separators, you can supply them as a regex to the `sep_in` argument
 
 ```{r, collapse = TRUE}
-to_any_case(names(iris), preprocess = "\\.")
+to_any_case(names(iris), sep_in = "\\.")
 ```
 
 This is especially handy, when special characters have a meaning as a separator or for example as a decimal mark
 
 ```{r, collapse = TRUE}
-to_any_case("Pi.Value:3.14", preprocess = ":|(?<!\\d)\\.")
+to_any_case("Pi.Value:3.14", sep_in = ":|(?<!\\d)\\.")
 ```
 
-Of course other cases are supported (`case`) and separators can be adjusted (`postprocess`)
+Of course other cases are supported (`case`) and separators can be adjusted (`sep_out`)
 
 ```{r, collapse = TRUE}
-to_any_case(names(iris), preprocess = "\\.", case = "upper_camel", postprocess = " ")
+to_any_case(names(iris), sep_in = "\\.", case = "upper_camel", sep_out = " ")
 ```
 
 And you might want to remove special characters along the way
 
 ```{r, collapse = TRUE}
 to_any_case("Doppelgänger is originally german", 
-            replace_special_characters = "german", case = "upper_camel")
+            transliterations = "german", case = "upper_camel")
 ```
 
 All of the cases like: snake, lower_camel, upper_camel, all_caps, lower_upper, upper_lower and mixed are based on parsed case

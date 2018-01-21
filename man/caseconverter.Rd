@@ -12,74 +12,57 @@
 \alias{to_upper_lower_case}
 \title{Specific case converter shortcuts}
 \usage{
-to_snake_case(string, preprocess = NULL, replace_special_characters = NULL,
-  postprocess = NULL, prefix = "", postfix = "", unique_sep = NULL,
-  empty_fill = NULL, parsing_option = 1, abbreviations = NULL)
+to_snake_case(string, abbreviations = NULL, sep_in = NULL,
+  preprocess = NULL, parsing_option = 1, transliterations = NULL,
+  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
-to_lower_camel_case(string, preprocess = NULL,
-  replace_special_characters = NULL, postprocess = NULL, prefix = "",
-  postfix = "", unique_sep = NULL, empty_fill = NULL,
-  parsing_option = 1, abbreviations = NULL)
+to_lower_camel_case(string, abbreviations = NULL, sep_in = NULL,
+  preprocess = NULL, parsing_option = 1, transliterations = NULL,
+  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
-to_upper_camel_case(string, preprocess = NULL,
-  replace_special_characters = NULL, postprocess = NULL, prefix = "",
-  postfix = "", unique_sep = NULL, empty_fill = NULL,
-  parsing_option = 1, abbreviations = NULL)
+to_upper_camel_case(string, abbreviations = NULL, sep_in = NULL,
+  preprocess = NULL, parsing_option = 1, transliterations = NULL,
+  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
-to_screaming_snake_case(string, preprocess = NULL,
-  replace_special_characters = NULL, postprocess = NULL, prefix = "",
-  postfix = "", unique_sep = NULL, empty_fill = NULL,
-  parsing_option = 1, abbreviations = NULL)
+to_screaming_snake_case(string, abbreviations = NULL, sep_in = NULL,
+  preprocess = NULL, parsing_option = 1, transliterations = NULL,
+  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
-to_parsed_case(string, preprocess = NULL, replace_special_characters = NULL,
-  postprocess = NULL, prefix = "", postfix = "", unique_sep = NULL,
-  empty_fill = NULL, parsing_option = 1, abbreviations = NULL)
+to_parsed_case(string, abbreviations = NULL, sep_in = NULL,
+  preprocess = NULL, parsing_option = 1, transliterations = NULL,
+  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
-to_mixed_case(string, preprocess = NULL, replace_special_characters = NULL,
-  postprocess = NULL, prefix = "", postfix = "", unique_sep = NULL,
-  empty_fill = NULL, parsing_option = 1, abbreviations = NULL)
+to_mixed_case(string, abbreviations = NULL, sep_in = NULL,
+  preprocess = NULL, parsing_option = 1, transliterations = NULL,
+  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
-to_lower_upper_case(string, preprocess = NULL,
-  replace_special_characters = NULL, postprocess = NULL, prefix = "",
-  postfix = "", unique_sep = NULL, empty_fill = NULL,
-  parsing_option = 1, abbreviations = NULL)
+to_lower_upper_case(string, abbreviations = NULL, sep_in = NULL,
+  preprocess = NULL, parsing_option = 1, transliterations = NULL,
+  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
-to_upper_lower_case(string, preprocess = NULL,
-  replace_special_characters = NULL, postprocess = NULL, prefix = "",
-  postfix = "", unique_sep = NULL, empty_fill = NULL,
-  parsing_option = 1, abbreviations = NULL)
+to_upper_lower_case(string, abbreviations = NULL, sep_in = NULL,
+  preprocess = NULL, parsing_option = 1, transliterations = NULL,
+  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 }
 \arguments{
 \item{string}{A string (for example names of a data frame).}
 
-\item{preprocess}{A string (if not \code{NULL}) that will be wrapped internally
-into \code{stringr::regex()}. All matches will be replaced by underscores. Underscores can later turned into another separator via \code{postprocess}.}
+\item{abbreviations}{character with (uppercase) abbreviations. This marks
+abbreviations with an underscore behind (in front of the parsing).
+useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2.}
 
-\item{replace_special_characters}{A character vector (if not \code{NULL}). The entries of this argument
-need to be elements of \code{stringi::stri_trans_list()} (like "Latin-ASCII", which is often useful) or names of lookup tables (currently
-only "german" is supported). In the order of the entries the letters of the input
- string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
- matches of the lookup table.
+\item{sep_in}{(short for separator input) A regex supplied as a character (if not \code{NULL}), which will be wrapped internally
+into \code{stringr::regex()}. All matches will be replaced by underscores. Underscores can later turned into another separator via \code{sep_out}.}
 
-You should use this feature with care in case of \code{case = "parsed"} and 
-\code{case = "none"}, since for upper case letters, which have transliterations/replacements
- of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
- might not always be what is intended.}
-
-\item{postprocess}{String that will be used as separator. The defaults are \code{"_"} 
-and \code{""}, regarding the specified \code{case}.}
-
-\item{prefix}{prefix (string).}
-
-\item{postfix}{postfix (string).}
-
-\item{unique_sep}{A string. If not \code{NULL}, then duplicated names will get 
-a suffix integer
-in the order of their appearance. The suffix is separated by the supplied string
- to this argument.}
-
-\item{empty_fill}{A string. If it is supplied, then each entry that matches "" will be replaced
-by the supplied string to this argument.}
+\item{preprocess}{deprecated. Pls use \code{sep_in} instead}
 
 \item{parsing_option}{An integer that will determine the parsing_option.
 #' \itemize{
@@ -92,9 +75,35 @@ by the supplied string to this argument.}
  \item{any other integer <= 0: no parsing"}
  }}
 
-\item{abbreviations}{character with (uppercase) abbreviations. This marks
-abbreviations with an underscore behind (in front of the parsing).
-useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2.}
+\item{transliterations}{A character vector (if not \code{NULL}). The entries of this argument
+need to be elements of \code{stringi::stri_trans_list()} (like "Latin-ASCII", which is often useful) or names of lookup tables (currently
+only "german" is supported). In the order of the entries the letters of the input
+ string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
+ matches of the lookup table.
+ 
+You should use this feature with care in case of \code{case = "parsed"} and 
+\code{case = "none"}, since for upper case letters, which have transliterations/replacements
+ of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
+ might not always be what is intended.}
+
+\item{replace_special_characters}{deprecated. Pls use \code{transliterations} instead.}
+
+\item{sep_out}{(short for separator output) String that will be used as separator. The defaults are \code{"_"} 
+and \code{""}, regarding the specified \code{case}.}
+
+\item{postprocess}{deprecated. Pls use \code{sep_out} instead.}
+
+\item{unique_sep}{A string. If not \code{NULL}, then duplicated names will get 
+a suffix integer
+in the order of their appearance. The suffix is separated by the supplied string
+ to this argument.}
+
+\item{empty_fill}{A string. If it is supplied, then each entry that matches "" will be replaced
+by the supplied string to this argument.}
+
+\item{prefix}{prefix (string).}
+
+\item{postfix}{postfix (string).}
 }
 \value{
 A character vector according the specified parameters above.
@@ -105,8 +114,8 @@ A character vector according the specified target case.
 Wrappers around \code{to_any_case()}
 }
 \note{
-caseconverters are vectorised over \code{postprocess}, \code{prefix} and \code{postfix}.
-\code{postprocess} might follow in the future.
+caseconverters are vectorised over \code{string}, \code{sep_in}, \code{sep_out},
+ \code{empty_fill}, \code{prefix} and \code{postfix}.
 }
 \examples{
 strings <- c("this Is a Strange_string", "AND THIS ANOTHER_One", NA)

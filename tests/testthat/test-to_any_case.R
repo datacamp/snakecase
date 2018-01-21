@@ -18,7 +18,7 @@ test_that("examples", {
   expect_equal(to_any_case(examples, case = "parsed"),
              cases[["parsed_case"]])
   
-  expect_equal(to_any_case("R.Studio", case = "big_camel", postprocess = "-"),
+  expect_equal(to_any_case("R.Studio", case = "big_camel", sep_out = "-"),
                "R.Studio")
   
   expect_equal(to_any_case("HAMBURGcityGERUsa", case = "parsed", parsing_option = 3),
@@ -93,8 +93,8 @@ test_that("janitor-pkg-tests",{
       gsub("%", ".percent_", .) %>%
       gsub("^[ ]+", "", .) %>%
       make.names(.) %>%
-      to_any_case(case = case, preprocess = "\\.", 
-                  replace_special_characters = c("Latin-ASCII"))
+      to_any_case(case = case, sep_in = "\\.", 
+                  transliterations = c("Latin-ASCII"))
     # Handle duplicated names - they mess up dplyr pipelines
     # This appends the column number to repeated instances of duplicate variable names
     dupe_count <- vapply(1:length(new_names), function(i) { 
@@ -204,35 +204,44 @@ test_that("janitor-pkg-tests",{
 #   ) 
 # })
 
+
 test_that("random examples", 
           expect_equal(to_any_case("string123", case = "snake"),
                        "string_123"))
+# test_that("deprecated",
+#           expect_warning(to_any_case("bla", protect = "_"),
+#                          "argument protect is deprecated; If you really need this argument, pls submit an issue on https://github.com/Tazinho/snakecase")
+#           )
+
+test_that("empty_fill",
+          expect_equal(to_any_case("", empty_fill = "bla"),
+          "bla"))
 
 test_that("complex strings", {
   strings2 <- c("this - Is_-: a Strange_string", "\u00C4ND THIS ANOTHER_One")
   
-  expect_equal(to_any_case(strings2, case = "snake", preprocess = "-|\\:"),
+  expect_equal(to_any_case(strings2, case = "snake", sep_in = "-|\\:"),
                c("this_is_a_strange_string", "\u00E4nd_this_another_one"))
   
   expect_equal(to_any_case("MERKWUERDIGER-VariablenNAME mit.VIELENMustern_version: 3.7.4",
                            case = "snake",
-                           preprocess = "-|:|(?<!\\d)\\.",
-                           postprocess = "."),
+                           sep_in = "-|:|(?<!\\d)\\.",
+                           sep_out = "."),
                "merkwuerdiger.variablen.name.mit.vielen.mustern.version.3.7.4")
   
   expect_equal(to_any_case("R.Studio", case = "big_camel"),
                c("R.Studio"))
   
-  expect_equal(to_any_case("R.Studio: v 1.0.143", case = "big_camel", preprocess = "\\.", postprocess = "_"),
+  expect_equal(to_any_case("R.Studio: v 1.0.143", case = "big_camel", sep_in = "\\.", sep_out = "_"),
                "R_Studio:V_1_0_143")
   
-  expect_equal(to_any_case("R.aStudio", case = "snake", postprocess = "-"), "r.a-studio")
-  expect_equal(to_any_case("R.aStudio", case = "snake", postprocess = "-"), "r.a-studio")
-  expect_equal(to_any_case("R.aStudio", case = "big_camel", postprocess = "-"), "R.A-Studio")
-  expect_equal(to_any_case("R.aStudio", case = "big_camel", postprocess = "-"), "R.A-Studio")
-  expect_equal(to_any_case("R.aStudio", case = "small_camel", postprocess = "-"), "r.A-Studio")
-  expect_equal(to_any_case("R.aStudio", case = "small_camel", postprocess = "-"), "r.A-Studio")
-  expect_equal(to_any_case("r.aStudio", postprocess = "-", case = "big_camel"), "R.A-Studio")
+  expect_equal(to_any_case("R.aStudio", case = "snake", sep_out = "-"), "r.a-studio")
+  expect_equal(to_any_case("R.aStudio", case = "snake", sep_out = "-"), "r.a-studio")
+  expect_equal(to_any_case("R.aStudio", case = "big_camel", sep_out = "-"), "R.A-Studio")
+  expect_equal(to_any_case("R.aStudio", case = "big_camel", sep_out = "-"), "R.A-Studio")
+  expect_equal(to_any_case("R.aStudio", case = "small_camel", sep_out = "-"), "r.A-Studio")
+  expect_equal(to_any_case("R.aStudio", case = "small_camel", sep_out = "-"), "r.A-Studio")
+  expect_equal(to_any_case("r.aStudio", sep_out = "-", case = "big_camel"), "R.A-Studio")
   
   expect_equal(to_any_case("rStudio", case = "none", prefix = "rrr."),
                "rrr.rStudio")
@@ -242,7 +251,7 @@ test_that("complex strings", {
   expect_equal(to_any_case("Rstudio_STudio_sssTTT", case = "mixed", parsing_option = 2),
                "Rstudio_St_udio_sss_Ttt")
   
-  expect_equal(to_any_case(names(iris), case = "lower_upper", preprocess = "\\.", postprocess = "-"),
+  expect_equal(to_any_case(names(iris), case = "lower_upper", sep_in = "\\.", sep_out = "-"),
                c("sepal-LENGTH", "sepal-WIDTH", "petal-LENGTH", "petal-WIDTH", "species"))
   
   expect_equal(to_any_case("R.aStudio", case = "lower_upper"),
@@ -252,9 +261,9 @@ test_that("complex strings", {
   
   expect_equal(to_any_case("R.aStudio", case = "lower_upper"),
                "r.Astudio")
-  expect_equal(to_any_case("R.aStudio", case = "lower_upper", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "lower_upper", sep_out = "-"),
                "r.A-studio")
-  expect_equal(to_any_case("R.aStudio", case = "lower_upper", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "lower_upper", sep_out = "-"),
                "r.A-studio")
   
   expect_equal(to_any_case("rstudio", case = "all_caps"),
@@ -266,24 +275,24 @@ test_that("complex strings", {
   expect_equal(to_any_case("bla rstudio", case = "lower_camel"),
                "blaRstudio")
   
-  expect_equal(to_any_case("R.aStudio", case = "parsed", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "parsed", sep_out = "-"),
                "R.a-Studio")
-  expect_equal(to_any_case("R.aStudio", case = "small_camel", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "small_camel", sep_out = "-"),
                "r.A-Studio")
-  expect_equal(to_any_case("R.aStudio", case = "big_camel", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "big_camel", sep_out = "-"),
                "R.A-Studio")
-  expect_equal(to_any_case("R.aStudio", case = "screaming_snake", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "screaming_snake", sep_out = "-"),
                "R.A-STUDIO")
-  expect_equal(to_any_case("R.aStudio", case = "lower_upper", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "lower_upper", sep_out = "-"),
                "r.A-studio")
-  expect_equal(to_any_case("R.aStudio", case = "upper_lower", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "upper_lower", sep_out = "-"),
                "R.a-STUDIO")
-  expect_equal(to_any_case("R.aStudio", case = "none", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "none", sep_out = "-"),
                "R.aStudio")
-  expect_equal(to_any_case("R.aStudio", case = "mixed", postprocess = "-"),
+  expect_equal(to_any_case("R.aStudio", case = "mixed", sep_out = "-"),
                "R.a-Studio")
   
-  expect_equal(to_any_case(character(0), postprocess = "c"), character())
+  expect_equal(to_any_case(character(0), sep_out = "c"), character())
   
   expect_equal(to_any_case("fdf 1 2", case = "big_camel"),
                "Fdf1_2")
@@ -297,22 +306,22 @@ test_that("complex strings", {
   expect_equal(to_any_case(c("R.aStudio", NA, NA, NA, NA), case = "upper_lower"),
                c("R.aSTUDIO", NA, NA, NA, NA))
   
-  expect_equal(to_any_case("ac\u00C4o", replace_special_characters = "Latin-ASCII"),
+  expect_equal(to_any_case("ac\u00C4o", transliterations = "Latin-ASCII"),
                "ac_ao")
   
-  expect_equal(to_any_case("ac\u00C4o", replace_special_characters = c("german", "Latin-ASCII")),
+  expect_equal(to_any_case("ac\u00C4o", transliterations = c("german", "Latin-ASCII")),
                "ac_aeo")
   
-  expect_equal(to_any_case("\u00E6", replace_special_characters = "Latin-ASCII"),
+  expect_equal(to_any_case("\u00E6", transliterations = "Latin-ASCII"),
                 "ae")
   
-  expect_equal(to_any_case("bla.bla", case = "none", preprocess = "\\."),
+  expect_equal(to_any_case("bla.bla", case = "none", sep_in = "\\."),
                "bla_bla")
   
   expect_equal(to_any_case("blaUSABlaGERBlaZDFBla", abbreviations = c("USA", "GER", "ZDF", "BLA"), case = "mixed"),
                "bla_USA_Bla_GER_Bla_ZDF_Bla")
   
-  expect_equal(to_any_case("someUSPeople", abbreviations = "US", case = "mixed", postprocess = " "),
+  expect_equal(to_any_case("someUSPeople", abbreviations = "US", case = "mixed", sep_out = " "),
                "some US People")
   
   # expect_equal(to_any_case(c(NA, NA, NA), "lower_upper"),
@@ -345,7 +354,7 @@ test_that("complex strings", {
 
 
 test_that("stackoverflow answers", {
-  expect_equal(to_any_case(c("ThisText", "NextText"), case = "snake", postprocess = "\\."),
+  expect_equal(to_any_case(c("ThisText", "NextText"), case = "snake", sep_out = "\\."),
                c("this.text", "next.text"))
   
   expect_equal(to_any_case(c("BobDylanUSA",
@@ -353,18 +362,18 @@ test_that("stackoverflow answers", {
                              "HelpfulStackOverflowPeople",
                              "IAmATallDrinkOfWater"),
                            case = "parsed",
-                           postprocess = " "),
+                           sep_out = " "),
                c("Bob Dylan USA", "Mikhail Gorbachev USSR",
                  "Helpful Stack Overflow People", "I Am A Tall Drink Of Water"))
   
   expect_equal(to_any_case(c("ICUDays","SexCode","MAX_of_MLD","Age.Group"),
                            case = "snake",
-                           preprocess = "\\."),
+                           sep_in = "\\."),
                c("icu_days", "sex_code", "max_of_mld", "age_group")) 
 
   expect_equal(to_any_case(c("ICUDays","SexCode","MAX_of_MLD","Age.Group"),
                            case = "small_camel",
-                           preprocess = "\\."),
+                           sep_in = "\\."),
                c("icuDays", "sexCode", "maxOfMld", "ageGroup")) 
   
   expect_equal(unlist(strsplit(to_parsed_case("thisIsSomeCamelCase"), "_")),
@@ -372,12 +381,12 @@ test_that("stackoverflow answers", {
   
   expect_equal(to_any_case(c("zip code", "state", "final count"),
                            case = "big_camel",
-                           postprocess = " "),
+                           sep_out = " "),
                c("Zip Code", "State", "Final Count"))
   
   expect_equal(to_any_case(c("this.text", "next.text"),
                            case = "big_camel", 
-                           preprocess = "\\."),
+                           sep_in = "\\."),
                c("ThisText", "NextText"))
 })
 
@@ -416,8 +425,8 @@ test_that("expand.grid", {
   #                    replace_special_characters = replace_special_characters,
   #                    stringsAsFactors = FALSE)
   expect_equal(purrrlyr::invoke_rows(snakecase::to_any_case, dat,
-                     preprocess = NULL,
-                     postprocess = NULL,
+                     sep_in = NULL,
+                     sep_out = NULL,
                      .collate = "cols",
                      .to = "output") %>% .$output, #%>% dput
                c(NA, "", "s_na_k_er", "SNAKE_SNAKE_CASE", "snake_Snak_E_Case", 
