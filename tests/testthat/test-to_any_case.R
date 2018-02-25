@@ -21,18 +21,43 @@ test_that("examples", {
   expect_equal(to_any_case("R.Studio", case = "big_camel", sep_out = "-"),
                "R.Studio")
   
-  expect_equal(to_any_case("HAMBURGcityGERUsa", case = "parsed", parsing_option = 3),
-               "HAMBURG_city_GERU_sa")
-  
-  expect_equal(to_any_case("HAMBURGcityGERUsa", case = "parsed", parsing_option = 4),
-               "HAMBURG_city_GER_Usa")
-  
   expect_equal(to_any_case("HAMBURGcity", case = "parsed", parsing_option = 0),
                "HAMBURGcity")
   
   expect_equal(to_any_case(c("RSSfeedRSSfeed", "USPassport", "USpassport"), abbreviations = c("RSS", "US")),
                c("rss_feed_rss_feed", "us_passport", "us_passport"))
-}
+  
+  expect_equal(to_any_case("NBAGame", abbreviations = "NBA", case = "parsed"),
+               "NBA_Game")
+  expect_equal(to_any_case("NBAGame", abbreviations = "NBA", case = "mixed"),
+               "NBA_Game")
+  expect_equal(to_any_case("NBAGame", abbreviations = "NBA", case = "snake"),
+               "nba_game")
+  expect_equal(to_any_case("NBAGame", abbreviations = "NBA", case = "screaming_snake"),
+               "NBA_GAME")
+  expect_equal(to_any_case("NBAGame", abbreviations = "NBA", case = "internal_parsing"),
+               "NBA_Game")
+  expect_equal(to_any_case("NBAGame", abbreviations = "NBA", case = "upper_camel"),
+               "NBAGame")
+  expect_equal(to_any_case("nba_game", abbreviations = "NBA", case = "lower_camel"),
+               "nbaGame")
+  expect_equal(to_any_case("NBA_game", abbreviations = "NBA", case = "upper_camel"),
+               "NBAGame")
+  expect_equal(to_any_case("nba_game", abbreviations = "NBA", case = "upper_camel"),
+               "NBAGame")
+  expect_equal(to_any_case("NBA_game_NBA", abbreviations = "NBA", case = "lower_camel"),
+               "nbaGameNBA")
+  expect_equal(to_any_case("NBA_game_NBA", abbreviations = "NBA", case = "lower_upper"),
+               "nbaGAMEnba")
+  expect_equal(to_any_case("NBA_game", abbreviations = "NBA", case = "mixed"),
+               "NBA_game")
+  expect_equal(to_any_case("NBA_game_NBA", abbreviations = "NBA", case = "mixed"),
+               "NBA_game_NBA")
+  expect_equal(to_snake_case(c("NBAGame", "NBAgame"), abbreviations = "NBA"),
+               c("nba_game", "nba_game"))
+  expect_equal(to_upper_camel_case(c("nba_game", "nba_game"), abbreviations = "NBA"),
+               c("NBAGame", "NBAGame"))
+  }
 )
 
 test_that("preserve-names-attribute", {
@@ -87,13 +112,12 @@ test_that("preserve-names-attribute", {
 
 test_that("janitor-pkg-tests",{
   clean_names3 <- function(old_names, case = "snake"){
-    new_names <- old_names %>%
-      gsub("'", "", .) %>% # remove quotation marks
-      gsub("\"", "", .) %>% # remove quotation marks
-      gsub("%", ".percent_", .) %>%
-      gsub("^[ ]+", "", .) %>%
-      make.names(.) %>%
-      to_any_case(case = case, sep_in = "\\.", 
+    new_names <- gsub("'", "", old_names) # remove quotation marks
+    new_names <- gsub("\"", "", new_names) # remove quotation marks
+    new_names <- gsub("%", ".percent_", new_names)
+    new_names <- gsub("^[ ]+", "", new_names)
+    new_names <- make.names(new_names)
+    new_names <- to_any_case(new_names, case = case, sep_in = "\\.", 
                   transliterations = c("Latin-ASCII"))
     # Handle duplicated names - they mess up dplyr pipelines
     # This appends the column number to repeated instances of duplicate variable names
@@ -212,10 +236,21 @@ test_that("random examples",
 #           expect_warning(to_any_case("bla", protect = "_"),
 #                          "argument protect is deprecated; If you really need this argument, pls submit an issue on https://github.com/Tazinho/snakecase")
 #           )
+test_that("transliterations_error", 
+          expect_error(to_any_case("bla", transliterations = "bla"),
+                       "Input to `transliterations` must be `NULL` or a string containing elements
+               from the internal lookup dictionaries or from `stringi::stri_trans_list()`.",
+                       fixed = TRUE))
 
 test_that("empty_fill",
           expect_equal(to_any_case("", empty_fill = "bla"),
           "bla"))
+
+test_that("flip and swap", {
+          expect_equal(to_any_case("rSTUDIO", case = "flip"), "Rstudio")
+          
+          expect_equal(to_any_case("rSTUDIO", case = "swap"), "Rstudio")
+})
 
 test_that("complex strings", {
   strings2 <- c("this - Is_-: a Strange_string", "\u00C4ND THIS ANOTHER_One")
@@ -329,12 +364,12 @@ test_that("complex strings", {
   # 
   # expect_equal(to_any_case(c(NA, NA, NA), "upper_lower"),
   #              rep(NA_character_, 3))
-  expect_equal(to_any_case("blaBla.bla", case = "big_camel", parsing_option = 5),
+  expect_equal(snakecase::to_any_case("blaBla.bla", case = "big_camel", parsing_option = 3),
                "BlaBla.bla")
   
-  expect_equal(to_any_case("bla-bla", case = "upper_camel", parsing_option = 5),
+  expect_equal(to_any_case("bla-bla", case = "upper_camel", parsing_option = 3),
                "Bla-bla")
-  expect_equal(to_any_case("bla.bla", case = "upper_camel", parsing_option = 5),
+  expect_equal(to_any_case("bla.bla", case = "upper_camel", parsing_option = 3),
                "Bla.bla")
   expect_equal(to_any_case("bla.bla", case = "upper_camel"),
                "Bla.Bla")
@@ -349,6 +384,9 @@ test_that("complex strings", {
                "SOME11_21_31numbers11_21_32WITH11_11diffs11_22D")
   expect_equal(to_any_case("some11 21 31numbers_11 21 32_With11 11_diffs11 22 d", case = "lower_upper"),
                "some11_21_31NUMBERS11_21_32with11_11DIFFS11_22d")
+  
+  expect_equal(to_any_case("email22Version_33 test", parsing_option = 4),
+               "email22version_33_test")
   
 })
 
@@ -376,7 +414,7 @@ test_that("stackoverflow answers", {
                            sep_in = "\\."),
                c("icuDays", "sexCode", "maxOfMld", "ageGroup")) 
   
-  expect_equal(unlist(strsplit(to_parsed_case("thisIsSomeCamelCase"), "_")),
+  expect_equal(unlist(strsplit(snakecase::to_parsed_case("thisIsSomeCamelCase"), "_")),
                c("this", "Is", "Some", "Camel", "Case"))
   
   expect_equal(to_any_case(c("zip code", "state", "final count"),
@@ -428,7 +466,7 @@ test_that("expand.grid", {
                      sep_in = NULL,
                      sep_out = NULL,
                      .collate = "cols",
-                     .to = "output") %>% .$output, #%>% dput
+                     .to = "output")$output, #%>% dput
                c(NA, "", "s_na_k_er", "SNAKE_SNAKE_CASE", "snake_Snak_E_Case", 
                  "SNAKE_snak_E_case", "ss_R_Rss", "ss_RRRR", "this_Is_Some_Camel_Case", 
                  "this.text", "final_count", "Bob_Dylan_USA", "Mikhail_Gorbachev_USSR", 

@@ -10,46 +10,43 @@
 \alias{to_mixed_case}
 \alias{to_lower_upper_case}
 \alias{to_upper_lower_case}
+\alias{to_swap_case}
 \title{Specific case converter shortcuts}
 \usage{
 to_snake_case(string, abbreviations = NULL, sep_in = NULL,
-  preprocess = NULL, parsing_option = 1, transliterations = NULL,
-  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  parsing_option = 1, transliterations = NULL, sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_lower_camel_case(string, abbreviations = NULL, sep_in = NULL,
-  preprocess = NULL, parsing_option = 1, transliterations = NULL,
-  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  parsing_option = 1, transliterations = NULL, sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_upper_camel_case(string, abbreviations = NULL, sep_in = NULL,
-  preprocess = NULL, parsing_option = 1, transliterations = NULL,
-  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  parsing_option = 1, transliterations = NULL, sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_screaming_snake_case(string, abbreviations = NULL, sep_in = NULL,
-  preprocess = NULL, parsing_option = 1, transliterations = NULL,
-  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  parsing_option = 1, transliterations = NULL, sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_parsed_case(string, abbreviations = NULL, sep_in = NULL,
-  preprocess = NULL, parsing_option = 1, transliterations = NULL,
-  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  parsing_option = 1, transliterations = NULL, sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_mixed_case(string, abbreviations = NULL, sep_in = NULL,
-  preprocess = NULL, parsing_option = 1, transliterations = NULL,
-  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  parsing_option = 1, transliterations = NULL, sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_lower_upper_case(string, abbreviations = NULL, sep_in = NULL,
-  preprocess = NULL, parsing_option = 1, transliterations = NULL,
-  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  parsing_option = 1, transliterations = NULL, sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_upper_lower_case(string, abbreviations = NULL, sep_in = NULL,
-  preprocess = NULL, parsing_option = 1, transliterations = NULL,
-  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
+  parsing_option = 1, transliterations = NULL, sep_out = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
+
+to_swap_case(string, abbreviations = NULL, sep_in = NULL,
+  parsing_option = 1, transliterations = NULL, sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 }
 \arguments{
@@ -57,21 +54,19 @@ to_upper_lower_case(string, abbreviations = NULL, sep_in = NULL,
 
 \item{abbreviations}{character with (uppercase) abbreviations. This marks
 abbreviations with an underscore behind (in front of the parsing).
-useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2.}
+Useful if \code{parsing_option} 1 is needed, but some abbreviations within the string need \code{parsing_option} 2.
+Use this feature with care: One letter abbreviations and abbreviations next to each other may not be handled correctly, since those cases would introduce ambiguity in parsing.}
 
 \item{sep_in}{(short for separator input) A regex supplied as a character (if not \code{NULL}), which will be wrapped internally
 into \code{stringr::regex()}. All matches will be replaced by underscores. Underscores can later turned into another separator via \code{sep_out}.}
 
-\item{preprocess}{deprecated. Pls use \code{sep_in} instead}
-
 \item{parsing_option}{An integer that will determine the parsing_option.
-#' \itemize{
+\itemize{
  \item{1: \code{RRRStudio -> RRR_Studio}}
  \item{2: \code{RRRStudio -> RRRS_tudio}}
- \item{3: parses at the beginning like option 1 and the rest like option 2.}
- \item{4: parses at the beginning like option 2 and the rest like option 1.}
- \item{5: parses like option 1 but suppresses "_" around non special characters.
+ \item{3: parses like option 1 but suppresses "_" around non special characters.
  In this way case conversion won't apply after these characters. See examples.}
+ \item{4: parses like option 1, but digits directly behind/in front non-digits, will stay as is.}
  \item{any other integer <= 0: no parsing"}
  }}
 
@@ -81,17 +76,13 @@ only "german" is supported). In the order of the entries the letters of the inpu
  string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
  matches of the lookup table.
  
-You should use this feature with care in case of \code{case = "parsed"} and 
+You should use this feature with care in case of \code{case = "parsed"}, \code{case = "internal_parsing"} and 
 \code{case = "none"}, since for upper case letters, which have transliterations/replacements
  of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
  might not always be what is intended.}
 
-\item{replace_special_characters}{deprecated. Pls use \code{transliterations} instead.}
-
 \item{sep_out}{(short for separator output) String that will be used as separator. The defaults are \code{"_"} 
 and \code{""}, regarding the specified \code{case}.}
-
-\item{postprocess}{deprecated. Pls use \code{sep_out} instead.}
 
 \item{unique_sep}{A string. If not \code{NULL}, then duplicated names will get 
 a suffix integer
@@ -128,11 +119,12 @@ to_lower_upper_case(strings)
 to_upper_lower_case(strings)
 to_parsed_case(strings)
 to_mixed_case(strings)
+to_swap_case(strings)
 
 
 }
 \seealso{
-\href{https://github.com/Tazinho/snakecase}{snakecase on github}, \code{\link{to_any_case}} for flexible high level conversion.
+\href{https://github.com/Tazinho/snakecase}{snakecase on github}, \code{\link{to_any_case}} for flexible high level conversion and more examples.
 }
 \author{
 Malte Grosser, \email{malte.grosser@gmail.com}

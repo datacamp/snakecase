@@ -5,12 +5,11 @@
 \title{General case conversion}
 \usage{
 to_any_case(string, case = c("snake", "small_camel", "big_camel",
-  "screaming_snake", "parsed", "mixed", "lower_upper", "upper_lower",
-  "all_caps", "lower_camel", "upper_camel", "internal_parsing", "none"),
-  abbreviations = NULL, sep_in = NULL, preprocess = NULL,
-  parsing_option = 1, transliterations = NULL,
-  replace_special_characters = NULL, sep_out = NULL, postprocess = NULL,
-  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
+  "screaming_snake", "parsed", "mixed", "lower_upper", "upper_lower", "swap",
+  "all_caps", "lower_camel", "upper_camel", "internal_parsing", "none", "flip"),
+  abbreviations = NULL, sep_in = NULL, parsing_option = 1,
+  transliterations = NULL, sep_out = NULL, unique_sep = NULL,
+  empty_fill = NULL, prefix = "", postfix = "")
 }
 \arguments{
 \item{string}{A string (for example names of a data frame).}
@@ -25,7 +24,7 @@ to_any_case(string, case = c("snake", "small_camel", "big_camel",
  \item{UPPERlower: \code{"upper_lower"}}
  }
 
- There are four "special" cases available:
+ There are five "special" cases available:
 \itemize{
  \item{\code{"parsed"}: This case is underlying all other cases. 
  Every substring a string consists
@@ -34,6 +33,8 @@ to_any_case(string, case = c("snake", "small_camel", "big_camel",
  upper case pattern from the input string are changed.}
  \item{\code{"mixed"}: Almost the same as \code{case = "parsed"}. Every letter which is not at the start
  or behind an underscore is turned into lowercase. If a substring is set as an abbreviation, it will stay in upper case.}
+ \item{\code{"swap"}: Upper case letters will be turned into lower case and vice versa. Also \code{case = "flip"} will work.
+ Doesn't work with any of the other arguments except \code{unique_sep}, \code{empty_fill}, \code{prefix} and \code{postfix}.}
  \item{\code{"none"}: Neither parsing nor case conversion occur. This case might be helpful, when
  one wants to call the function for the quick usage of the other parameters.
  Works with \code{sep_in}, \code{transliterations}, \code{sep_out}, \code{prefix},
@@ -41,26 +42,25 @@ to_any_case(string, case = c("snake", "small_camel", "big_camel",
   \code{empty_fill} and \code{unique_sep}.}
  \item{\code{"internal_parsing"}: This case is returning the internal parsing
  (suppressing the internal protection mechanism), which means that alphanumeric characters will be surrounded by underscores.
- It should only be used in very rare usecases and is mainly implemented to showcase the internal workings of \code{to_any_case()}}
+ It should only be used in very rare use cases and is mainly implemented to showcase the internal workings of \code{to_any_case()}}
  }}
 
 \item{abbreviations}{character with (uppercase) abbreviations. This marks
 abbreviations with an underscore behind (in front of the parsing).
-useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2.}
+Useful if \code{parsing_option} 1 is needed, but some abbreviations within the string need \code{parsing_option} 2.
+Use this feature with care: One letter abbreviations and abbreviations next to each other may not be handled correctly, since those cases would introduce ambiguity in parsing.}
 
 \item{sep_in}{(short for separator input) A regex supplied as a character (if not \code{NULL}), which will be wrapped internally
-into \code{stringr::regex()}. All matches will be replaced by underscores. Underscores can later turned into another separator via \code{postprocess}.}
-
-\item{preprocess}{deprecated. Pls use \code{sep_in} instead.}
+into \code{stringr::regex()}. All matches will be replaced by underscores (additionally to 
+\code{"_"} and \code{" "}, for which this is always true). Underscores can later turned into another separator via \code{sep_out}.}
 
 \item{parsing_option}{An integer that will determine the parsing_option.
 \itemize{
  \item{1: \code{RRRStudio -> RRR_Studio}}
  \item{2: \code{RRRStudio -> RRRS_tudio}}
- \item{3: parses at the beginning like option 1 and the rest like option 2.}
- \item{4: parses at the beginning like option 2 and the rest like option 1.}
- \item{5: parses like option 1 but suppresses "_" around non special characters.
+ \item{3: parses like option 1 but suppresses "_" around non special characters.
  In this way case conversion won't apply after these characters. See examples.}
+ \item{4: parses like option 1, but digits directly behind/in front non-digits, will stay as is.}
  \item{any other integer <= 0: no parsing"}
  }}
 
@@ -70,17 +70,13 @@ only "german" is supported). In the order of the entries the letters of the inpu
  string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
  matches of the lookup table.
  
-You should use this feature with care in case of \code{case = "parsed"} and 
+You should use this feature with care in case of \code{case = "parsed"}, \code{case = "internal_parsing"} and 
 \code{case = "none"}, since for upper case letters, which have transliterations/replacements
  of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
  might not always be what is intended.}
 
-\item{replace_special_characters}{deprecated. Pls use \code{transliterations} instead.}
-
 \item{sep_out}{(short for separator output) String that will be used as separator. The defaults are \code{"_"} 
 and \code{""}, regarding the specified \code{case}.}
-
-\item{postprocess}{deprecated. Pls use \code{sep_out} instead.}
 
 \item{unique_sep}{A string. If not \code{NULL}, then duplicated names will get 
 a suffix integer
@@ -123,15 +119,13 @@ to_any_case(strings, case = "none")
 to_any_case("HAMBURGcity", case = "parsed", parsing_option = 1)
 # so the second parsing option is the way to address this example
 to_any_case("HAMBURGcity", case = "parsed", parsing_option = 2)
-# one can also parse the beginning like parsing_option 1 and the rest like option 2
-to_any_case("HAMBURGcityGERUsa", case = "parsed", parsing_option = 3)
-# or starting like parsing_option 2 and for the rest switch to option 1
-to_any_case("HAMBURGcityGERUsa", case = "parsed", parsing_option = 4)
 # By default (option 1) characters are converted after non alpha numeric characters.
-# This option (5) suppresses this behaviour
-to_any_case("blaBla.bla", case = "big_camel", parsing_option = 5)
+# This option (3) suppresses this behaviour
+to_any_case("blaBla.bla", case = "big_camel", parsing_option = 3)
+# Numbers are always separated from characters via an underscore. 
+# To suppress this behaviour choose parsing_option 4
+snakecase::to_any_case("d3 library", case = "upper_camel", parsing_option = 4, sep_out = " ")
 # there might be reasons to suppress the parsing, while choosing neither one or two
-
 to_any_case("HAMBURGcity", case = "parsed", parsing_option = 0)
 
 ### Abbreviations
@@ -140,20 +134,25 @@ to_any_case(c("RSSfeedRSSfeed", "USPassport", "USpassport"), abbreviations = c("
 ### Separator input
 string <- "R.St\\u00FCdio: v.1.0.143"
 to_any_case(string)
-to_any_case(string, case = "snake", preprocess = ":|\\\\.")
+to_any_case(string, case = "snake", sep_in = ":|\\\\.")
 to_any_case(string, case = "snake",
-            preprocess = ":|(?<!\\\\d)\\\\.")
+            sep_in = ":|(?<!\\\\d)\\\\.")
 
 ### Transliterations
 to_any_case("\\u00E4ngstlicher Has\\u00EA", transliterations = c("german", "Latin-ASCII"))
 
-### Postprocess
+### sep_out
 strings2 <- c("this - Is_-: a Strange_string", "AND THIS ANOTHER_One")
-to_any_case(strings2, case = "snake", preprocess = "-|\\\\:", postprocess = " ")
-to_any_case(strings2, case = "big_camel", preprocess = "-|\\\\:", postprocess = "//")
+to_any_case(strings2, case = "snake", sep_in = "-|\\\\:", sep_out = " ")
+to_any_case(strings2, case = "big_camel", sep_in = "-|\\\\:", sep_out = "//")
+
+### Empty fill and unique sep
+to_any_case(c("","",""), empty_fill = c("empty", "empty", "also empty"))
+
+to_any_case(c("same", "same", "same", "other"), unique_sep = c(">"))
 
 ### Pre -and postfix
-to_any_case(strings2, case = "big_camel", preprocess = "-|\\\\:", postprocess = "//",
+to_any_case(strings2, case = "big_camel", sep_in = "-|\\\\:", sep_out = "//",
             prefix = "USER://", postfix = ".exe")
 
 }

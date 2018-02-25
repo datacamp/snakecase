@@ -14,7 +14,7 @@
 #'  \item{UPPERlower: \code{"upper_lower"}}
 #'  }
 #'
-#'  There are four "special" cases available:
+#'  There are five "special" cases available:
 #' \itemize{
 #'  \item{\code{"parsed"}: This case is underlying all other cases. 
 #'  Every substring a string consists
@@ -23,6 +23,8 @@
 #'  upper case pattern from the input string are changed.}
 #'  \item{\code{"mixed"}: Almost the same as \code{case = "parsed"}. Every letter which is not at the start
 #'  or behind an underscore is turned into lowercase. If a substring is set as an abbreviation, it will stay in upper case.}
+#'  \item{\code{"swap"}: Upper case letters will be turned into lower case and vice versa. Also \code{case = "flip"} will work.
+#'  Doesn't work with any of the other arguments except \code{unique_sep}, \code{empty_fill}, \code{prefix} and \code{postfix}.}
 #'  \item{\code{"none"}: Neither parsing nor case conversion occur. This case might be helpful, when
 #'  one wants to call the function for the quick usage of the other parameters.
 #'  Works with \code{sep_in}, \code{transliterations}, \code{sep_out}, \code{prefix},
@@ -30,26 +32,25 @@
 #'   \code{empty_fill} and \code{unique_sep}.}
 #'  \item{\code{"internal_parsing"}: This case is returning the internal parsing
 #'  (suppressing the internal protection mechanism), which means that alphanumeric characters will be surrounded by underscores.
-#'  It should only be used in very rare usecases and is mainly implemented to showcase the internal workings of \code{to_any_case()}}
+#'  It should only be used in very rare use cases and is mainly implemented to showcase the internal workings of \code{to_any_case()}}
 #'  }
 #' 
 #' @param abbreviations character with (uppercase) abbreviations. This marks
 #'  abbreviations with an underscore behind (in front of the parsing).
-#'  useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2.
+#'  Useful if \code{parsing_option} 1 is needed, but some abbreviations within the string need \code{parsing_option} 2.
+#'  Use this feature with care: One letter abbreviations and abbreviations next to each other may not be handled correctly, since those cases would introduce ambiguity in parsing.
 #'  
 #' @param sep_in (short for separator input) A regex supplied as a character (if not \code{NULL}), which will be wrapped internally
-#' into \code{stringr::regex()}. All matches will be replaced by underscores. Underscores can later turned into another separator via \code{postprocess}.
-#' 
-#' @param preprocess deprecated. Pls use \code{sep_in} instead.
+#' into \code{stringr::regex()}. All matches will be replaced by underscores (additionally to 
+#' \code{"_"} and \code{" "}, for which this is always true). Underscores can later turned into another separator via \code{sep_out}.
 #' 
 #' @param parsing_option An integer that will determine the parsing_option.
 #' \itemize{
 #'  \item{1: \code{RRRStudio -> RRR_Studio}}
 #'  \item{2: \code{RRRStudio -> RRRS_tudio}}
-#'  \item{3: parses at the beginning like option 1 and the rest like option 2.}
-#'  \item{4: parses at the beginning like option 2 and the rest like option 1.}
-#'  \item{5: parses like option 1 but suppresses "_" around non special characters.
+#'  \item{3: parses like option 1 but suppresses "_" around non special characters.
 #'  In this way case conversion won't apply after these characters. See examples.}
+#'  \item{4: parses like option 1, but digits directly behind/in front non-digits, will stay as is.}
 #'  \item{any other integer <= 0: no parsing"}
 #'  }
 #'
@@ -59,17 +60,13 @@
 #'  string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
 #'  matches of the lookup table.
 #'  
-#' You should use this feature with care in case of \code{case = "parsed"} and 
+#' You should use this feature with care in case of \code{case = "parsed"}, \code{case = "internal_parsing"} and 
 #' \code{case = "none"}, since for upper case letters, which have transliterations/replacements
 #'  of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
 #'  might not always be what is intended.
 #' 
-#' @param replace_special_characters deprecated. Pls use \code{transliterations} instead.
-#' 
 #' @param sep_out (short for separator output) String that will be used as separator. The defaults are \code{"_"} 
 #' and \code{""}, regarding the specified \code{case}.
-#' 
-#' @param postprocess deprecated. Pls use \code{sep_out} instead.
 #' 
 #' @param unique_sep A string. If not \code{NULL}, then duplicated names will get 
 #' a suffix integer
@@ -110,15 +107,13 @@
 #' to_any_case("HAMBURGcity", case = "parsed", parsing_option = 1)
 #' # so the second parsing option is the way to address this example
 #' to_any_case("HAMBURGcity", case = "parsed", parsing_option = 2)
-#' # one can also parse the beginning like parsing_option 1 and the rest like option 2
-#' to_any_case("HAMBURGcityGERUsa", case = "parsed", parsing_option = 3)
-#' # or starting like parsing_option 2 and for the rest switch to option 1
-#' to_any_case("HAMBURGcityGERUsa", case = "parsed", parsing_option = 4)
 #' # By default (option 1) characters are converted after non alpha numeric characters.
-#' # This option (5) suppresses this behaviour
-#' to_any_case("blaBla.bla", case = "big_camel", parsing_option = 5)
+#' # This option (3) suppresses this behaviour
+#' to_any_case("blaBla.bla", case = "big_camel", parsing_option = 3)
+#' # Numbers are always separated from characters via an underscore. 
+#' # To suppress this behaviour choose parsing_option 4
+#' snakecase::to_any_case("d3 library", case = "upper_camel", parsing_option = 4, sep_out = " ")
 #' # there might be reasons to suppress the parsing, while choosing neither one or two
-#' 
 #' to_any_case("HAMBURGcity", case = "parsed", parsing_option = 0)
 #' 
 #' ### Abbreviations
@@ -127,23 +122,26 @@
 #' ### Separator input
 #' string <- "R.St\u00FCdio: v.1.0.143"
 #' to_any_case(string)
-#' to_any_case(string, case = "snake", preprocess = ":|\\.")
+#' to_any_case(string, case = "snake", sep_in = ":|\\.")
 #' to_any_case(string, case = "snake",
-#'             preprocess = ":|(?<!\\d)\\.")
+#'             sep_in = ":|(?<!\\d)\\.")
 #' 
 #' ### Transliterations
 #' to_any_case("\u00E4ngstlicher Has\u00EA", transliterations = c("german", "Latin-ASCII"))
 #' 
-#' ### Postprocess
+#' ### sep_out
 #' strings2 <- c("this - Is_-: a Strange_string", "AND THIS ANOTHER_One")
-#' to_any_case(strings2, case = "snake", preprocess = "-|\\:", postprocess = " ")
-#' to_any_case(strings2, case = "big_camel", preprocess = "-|\\:", postprocess = "//")
+#' to_any_case(strings2, case = "snake", sep_in = "-|\\:", sep_out = " ")
+#' to_any_case(strings2, case = "big_camel", sep_in = "-|\\:", sep_out = "//")
+#' 
+#' ### Empty fill and unique sep
+#' to_any_case(c("","",""), empty_fill = c("empty", "empty", "also empty"))
+#' 
+#' to_any_case(c("same", "same", "same", "other"), unique_sep = c(">"))
 #' 
 #' ### Pre -and postfix
-#' to_any_case(strings2, case = "big_camel", preprocess = "-|\\:", postprocess = "//",
+#' to_any_case(strings2, case = "big_camel", sep_in = "-|\\:", sep_out = "//",
 #'             prefix = "USER://", postfix = ".exe")
-#' 
-#' @importFrom magrittr "%>%"
 #'
 #' @seealso \href{https://github.com/Tazinho/snakecase}{snakecase on github} or 
 #' \code{\link{caseconverter}} for some handy shortcuts.
@@ -152,44 +150,26 @@
 #'
 to_any_case <- function(string,
                         case = c("snake", "small_camel", "big_camel", "screaming_snake", 
-                                 "parsed", "mixed", "lower_upper", "upper_lower",
-                                 "all_caps", "lower_camel", "upper_camel", "internal_parsing", "none"),
+                                 "parsed", "mixed", "lower_upper", "upper_lower", "swap",
+                                 "all_caps", "lower_camel", "upper_camel", "internal_parsing", 
+                                 "none", "flip"),
                         abbreviations = NULL,
                         sep_in = NULL,
-                        preprocess = NULL,
                         parsing_option = 1,
                         transliterations = NULL,
-                        replace_special_characters = NULL,
                         sep_out = NULL,
-                        postprocess = NULL,
                         unique_sep = NULL,
                         empty_fill = NULL,
                         prefix = "",
                         postfix = ""){
   ### Deprecations:
-  if (!identical(preprocess, NULL)) {
-    warning("argument preprocess is renamed to sep_in and will be removed in later versions",
-            call. = FALSE)
-    if (identical(sep_in, NULL)) {
-      sep_in = preprocess
-    }
-  }
-  
-  if (!identical(postprocess, NULL)) {
-    warning("argument postprocess is renamed to sep_out and will be removed in later versions",
-            call. = FALSE)
-    if (identical(sep_out, NULL)) {
-      sep_out = postprocess
-    }
-  }
-  
-  if (!identical(replace_special_characters, NULL)) {
-    warning("argument replace_special_characters is renamed to transliterations and will be removed in later versions",
-            call. = FALSE)
-    if (identical(transliterations, NULL)) {
-      transliterations = replace_special_characters
-    }
-  }
+  # if (!identical(preprocess, NULL)) {
+  #   warning("argument preprocess is renamed to sep_in and will be removed in later versions",
+  #           call. = FALSE)
+  #   if (identical(sep_in, NULL)) {
+  #     sep_in = preprocess
+  #   }
+  # }
   ### Argument matching and checking
   case <- match.arg(case)
 ### check input length (necessary for NULL and atomic(0))
@@ -203,7 +183,7 @@ to_any_case <- function(string,
   # second string of those which contain an alphabetic character
   if(case == "upper_lower" | case == "lower_upper") {
     relevant <- function(string){
-      relevant <- string %>% stringr::str_detect("[:alpha:]")
+      relevant <- stringr::str_detect(string, "[:alpha:]")
       relevant[relevant] <- rep_len(c(TRUE, FALSE), sum(relevant))
       relevant
     }
@@ -212,23 +192,36 @@ to_any_case <- function(string,
   case[case == "all_caps"] <- "screaming_snake"
   case[case == "lower_camel"] <- "small_camel"
   case[case == "upper_camel"] <- "big_camel"
+  case[case == "flip"] <- "swap"
+### Handle swap case
+  
+  if (case == "swap") {
+    string <- gsub(pattern = "([[:upper:]])|([[:lower:]])",
+                   perl = TRUE,
+                   replacement = "\\L\\1\\U\\2",
+                   string)
+  }
+  
 ### abbreviation handling
   # mark abbreviation with an underscore behind (in front of the parsing)
   # useful if parsinoption 1 is needed, but some abbreviations need parsing_option 2
-  string <- abbreviation_internal(string, abbreviations)
+  if (case != "swap"){
+    string <- abbreviation_internal(string, abbreviations)
+  }
 ### ____________________________________________________________________________
 ### preprocess (regex into "_") and parsing (surrounding by "_")
-  string <- preprocess_internal(string, sep_in)
+if (case != "swap") {
+    string <- preprocess_internal(string, sep_in)
   
-  if (case != "none"){
+  if (!case %in% c("none")){
     string <- to_parsed_case_internal(string,
                                       parsing_option = parsing_option)
   } else {
-    string <- string %>%
-      purrr::map_chr(~ stringr::str_replace_all(.x, "_+", "_")) %>% 
-      purrr::map_chr(~ stringr::str_replace_all(.x, "^_|_$", ""))
+    string <- vapply(string, stringr::str_replace_all, "","_+", "_", 
+                     USE.NAMES = FALSE) 
+    string <- vapply(string, stringr::str_replace_all, "","^_|_$", "",
+                     USE.NAMES = FALSE)
   }
-  
 ### ____________________________________________________________________________
 ### "mixed", "snake", "small_camel", "big_camel", "screaming_case", "parsed"
   if(case %in% c("mixed", "snake", "small_camel",
@@ -236,89 +229,109 @@ to_any_case <- function(string,
                  "lower_upper", "upper_lower")){
 ### split-----------------------------------------------------------------------
     if(case %in% c("mixed", "snake", "screaming_snake", "parsed", "lower_upper", "upper_lower")){
-      string <- string %>% stringr::str_split("_")
+      string <- stringr::str_split(string, "_")
     }
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     if(case %in% c("small_camel", "big_camel")){
-      string <- string %>% 
-        stringr::str_split(pattern = "(?<!\\d)_|_(?!\\d)")
+      string <- stringr::str_split(string, pattern = "(?<!\\d)_|_(?!\\d)")
     }
 ### replacement of special characters_------------------------------------------
     if(!is.null(transliterations)){
-      string <- string %>%
-        purrr::map(~replace_special_characters_internal(.x, transliterations, case))
+      string <- lapply(string, function (x)
+        replace_special_characters_internal(x, transliterations, case))
     }
 ### caseconversion--------------------------------------------------------------
     if(case == "mixed"){
-      string <- string %>% 
-        purrr::map(~ifelse(!.x %in% abbreviations, 
-                           stringr::str_c(stringr::str_sub(.x, 1, 1),
-                                          stringr::str_sub(.x, 2) %>%
-                                            stringr::str_to_lower()),
-                           .x)
-                   )
+      string <- lapply(string,
+                       function(x) ifelse(!x %in% abbreviations, 
+                           stringr::str_c(stringr::str_sub(x, 1, 1),
+                                          stringr::str_to_lower(stringr::str_sub(x, 2))),
+                           x)
+        )
       }
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     if(case == "snake"){
-      string <- string %>%
-        purrr::map(~ stringr::str_to_lower(.x))
+      string <- lapply(string, stringr::str_to_lower)
     }
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     if(case == "big_camel"){
-      string <- string %>% purrr::map(stringr::str_to_lower)
-      string <- string %>% 
-        purrr::map(~ stringr::str_c(stringr::str_sub(.x, 1, 1) %>%
-                                          stringr::str_to_upper(),
-                                        stringr::str_sub(.x, 2)))
+      string <- lapply(string, stringr::str_to_lower)
+      if(!is.null(abbreviations)){
+      string <- lapply(string, 
+                       function(x) ifelse(x %in% stringr::str_to_lower(abbreviations), 
+                                          stringr::str_to_upper(x),
+                                          x)
+      )
+      }
+      string <- lapply(string,
+                       function(x) stringr::str_c(stringr::str_to_upper(stringr::str_sub(x, 1, 1)),
+                                                  stringr::str_sub(x, 2)))
     }
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     if(case == "small_camel"){
-      string <- string %>% purrr::map(stringr::str_to_lower)
-      string <- string %>% 
-        purrr::map(~ stringr::str_c(stringr::str_sub(.x, 1, 1) %>%
-                                      stringr::str_to_upper(),
-                                    stringr::str_sub(.x, 2)))
-      string <- string %>%
-        purrr::map_chr(stringr::str_c, collapse = " ") %>% 
-        purrr::map_chr(~ stringr::str_c(stringr::str_sub(.x, 1, 1) %>%
-                                          stringr::str_to_lower(),
-                                        stringr::str_sub(.x, 2))) %>% 
-        stringr::str_split(" ")
+      string <- lapply(string, stringr::str_to_lower)
+      string <- lapply(string, 
+                       function(x) stringr::str_c(stringr::str_to_upper(stringr::str_sub(x, 1, 1)),
+                                    stringr::str_sub(x, 2)))
+      string <- vapply(string, 
+                       stringr::str_c, "", collapse = " ",
+                       USE.NAMES = FALSE)
+      string <- vapply(string, 
+                       function(x) stringr::str_c(stringr::str_to_lower(stringr::str_sub(x, 1, 1)),
+                                        stringr::str_sub(x, 2)), "",
+               USE.NAMES = FALSE)
+      string <- stringr::str_split(string, " ")
+      if(!is.null(abbreviations)){ # handle abbreviations
+      string <- lapply(string,
+                       function(x) c(stringr::str_to_lower(x[1]), 
+                                     ifelse(stringr::str_to_lower(x[-1]) %in% stringr::str_to_lower(abbreviations),
+                                            stringr::str_to_upper(x[-1]), x[-1])))
+      }
     }
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     if(case == "screaming_snake"){
-      string <- string %>% purrr::map(stringr::str_to_upper)
+      string <- lapply(string, stringr::str_to_upper)
     }
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     if (case == "lower_upper"){
-      string[!is.na(string)] <- purrr::map2(string[!is.na(string)],
-                                            purrr::map(string[!is.na(string)],
-                                                       ~ relevant(.x)),
-                            # odds to lower
-                            ~{.x[.y] <- stringr::str_to_lower(.x[.y]);
-                            # others to upper
-                            .x[!.y] <- stringr::str_to_upper(.x[!.y]);
-                            .x}) 
+      string[!is.na(string)] <- mapply(function(x, y) { 
+        # odds to lower
+        x[y] <- stringr::str_to_lower(x[y]);
+        # others to upper
+        x[!y] <- stringr::str_to_upper(x[!y]);
+        x},
+        string[!is.na(string)],
+        lapply(string[!is.na(string)], relevant),
+        SIMPLIFY = FALSE,
+        USE.NAMES = TRUE)
     }
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     if (case == "upper_lower") {
-      string[!is.na(string)] <- purrr::map2(string[!is.na(string)], 
-                                            purrr::map(string[!is.na(string)],
-                                                       ~ relevant(.x)),
-                            # odds to upper
-                            ~{.x[.y] <- stringr::str_to_upper(.x[.y]);
-                            # others to lower
-                            .x[!.y] <- stringr::str_to_lower(.x[!.y]);
-                            .x}) 
+      string[!is.na(string)] <- mapply(function(x, y) {
+        # odds to upper
+        x[y] <- stringr::str_to_upper(x[y]);
+        # others to lower
+        x[!y] <- stringr::str_to_lower(x[!y]);
+        x},
+        string[!is.na(string)],
+        lapply(string[!is.na(string)], relevant),
+        SIMPLIFY = FALSE,
+        USE.NAMES = TRUE)
     }
 ### collapsing------------------------------------------------------------------
     if(case %in% c("none", "mixed", "snake", "screaming_snake", "parsed",
                    "small_camel", "big_camel", "lower_upper", "upper_lower")) {
-      string <- string %>% purrr::map_chr(~stringr::str_c(.x, collapse = "_"))
+      string <- vapply(string, 
+                       function(x) stringr::str_c(x, collapse = "_"), "",
+                       USE.NAMES = FALSE)
     }
     #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     # Protect (only internal, not via an argument).
     # Replace all "_" by "" which are around a not alphanumeric character
+    if (parsing_option == 4){
+      string <- stringr::str_replace_all(string, " ", "")
+    }
+    
     if (case != "internal_parsing"){
       string <- stringr::str_replace_all(string, "_(?![:alnum:])|(?<![:alnum:])_", "")
     }
@@ -326,9 +339,12 @@ to_any_case <- function(string,
 }
 ### postprocessing (ouput separator)s--------------------------------------------
     if(!is.null(sep_out) & !identical(string, character(0))){
-      string <- purrr::map2_chr(string,
-                                sep_out,
-                                ~ stringr::str_replace_all(.x, "_", .y))}
+      string <- mapply(function(x, y) 
+        stringr::str_replace_all(x, "_", y),
+                                 string,
+                                 sep_out,
+        USE.NAMES = FALSE)
+      }
     
     if(is.null(sep_out) & case %in% c("small_camel", "big_camel", 
                                             "lower_upper", "upper_lower")){
@@ -339,6 +355,8 @@ to_any_case <- function(string,
   if(case == "none" & !is.null(transliterations)){
     string <- replace_special_characters_internal(string, transliterations)
   }
+### ____________________________________________________________________________    
+} # close swap
 ### ____________________________________________________________________________
 ### fill empty strings
   if(!is.null(empty_fill) & any(string == "")){
