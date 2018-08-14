@@ -12,7 +12,7 @@
 
 <meta name="author" content="Malte Grosser" />
 
-<meta name="date" content="2018-03-24" />
+<meta name="date" content="2018-08-14" />
 
 <title>Case converters</title>
 
@@ -280,7 +280,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Case converters</h1>
 <h4 class="author"><em>Malte Grosser</em></h4>
-<h4 class="date"><em>2018-03-24</em></h4>
+<h4 class="date"><em>2018-08-14</em></h4>
 
 
 
@@ -298,7 +298,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">to_any_case</span>(<span class="st">&quot;Doppelgänger is originally german&quot;</span>, </a>
 <a class="sourceLine" id="cb3-2" data-line-number="2">            <span class="dt">transliterations =</span> <span class="st">&quot;german&quot;</span>, <span class="dt">case =</span> <span class="st">&quot;upper_camel&quot;</span>)</a>
 <a class="sourceLine" id="cb3-3" data-line-number="3">## [1] &quot;DoppelgaengerIsOriginallyGerman&quot;</a></code></pre></div>
-<p>All of the cases like: snake, lower_camel, upper_camel, all_caps, lower_upper, upper_lower and mixed are based on parsed case</p>
+<p>All of the cases like: snake, lower_camel, upper_camel, all_caps, lower_upper, upper_lower, mixed and sentence are based on parsed case</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">to_any_case</span>(<span class="st">&quot;THISIsHOW IAmPARSED!&quot;</span>, <span class="dt">case =</span> <span class="st">&quot;parsed&quot;</span>)</a>
 <a class="sourceLine" id="cb4-2" data-line-number="2">## [1] &quot;THIS_Is_HOW_I_Am_PARSED&quot;</a></code></pre></div>
 <p>Shortcut wrappers like <code>to_snake_case</code>, <code>to_lower_camel_case</code> etc. are available.</p>

@@ -60,6 +60,143 @@ test_that("examples", {
   }
 )
 
+test_that("attributes", {
+  expect_equal(
+    {strings <- c("this Is a Strange_string", "AND THIS ANOTHER_One");
+    names(strings) <- c("String A", "String B");
+    attr(strings, "test.attr") <- "test";
+    strings},
+    structure(c(`String A` = "this Is a Strange_string", `String B` = "AND THIS ANOTHER_One"),
+              test.attr = "test"))
+    }
+  )
+
+test_that("numerals", {
+  expect_equal(to_any_case("123bla123bla_434bla"),
+               "123_bla_123_bla_434_bla")
+  
+  expect_equal(to_any_case("123bla123bla_434bla", 
+                           numerals = "asis"),
+               "123bla123bla_434bla")
+  
+  expect_equal(to_any_case("123bla123bla_434bla",
+                           numerals = "left"),
+               "123_bla123_bla434_bla")
+
+  expect_equal(to_any_case("123bla123bla_434bla", 
+                           numerals = "right"),
+               "123bla_123bla_434bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", numerals = "middle"),
+               "123_bla_123_123_bla_434_bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", numerals = "asis"),
+               "123bla123_123bla_434bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", numerals = "left"),
+               "123_bla123_123_bla434_bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla",
+                           numerals = "right"),
+               "123bla_123_123bla_434bla")
+
+  expect_equal(to_any_case("123bla123_123bla_434bla", numerals = "right"), 
+               "123bla_123_123bla_434bla")
+
+  expect_equal(to_any_case("123bla123_123bla_434bla", numerals = "right"),
+               "123bla_123_123bla_434bla")
+  
+  expect_equal(to_upper_camel_case("123bla123_123bla_434bla"),
+               "123Bla123_123Bla434Bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", case = "upper_camel", numerals = "middle"),
+    "123Bla123_123Bla434Bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", case = "upper_camel", numerals = "asis"), "123Bla123_123Bla434Bla")
+
+  expect_equal(to_any_case("123bla123_123bla_434bla", case = "upper_camel", numerals = "left"), 
+               "123Bla123_123Bla434Bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", case = "upper_camel", numerals = "right"),
+               "123Bla123_123Bla434Bla")
+
+  expect_equal(to_any_case("123bla123_123bla_434bla", case = "parsed", numerals = "middle"),
+               "123_bla_123_123_bla_434_bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", case = "parsed", numerals = "asis"),
+               "123bla123_123bla_434bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", case = "parsed", numerals = "left"),
+               "123_bla123_123_bla434_bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla",
+                           case = "parsed",
+                           numerals = "right"),
+    "123bla_123_123bla_434bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", 
+                           case = "none",
+                           numerals = "middle"),
+               "123bla123_123bla_434bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", 
+                           case = "none", 
+                           numerals = "asis"),
+               "123bla123_123bla_434bla")
+
+  expect_equal(to_any_case("123bla123_123bla_434bla",
+                           case = "none",
+                           numerals = "left"),
+               "123bla123_123bla_434bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", 
+                           case = "none",
+                           numerals = "right"),
+               "123bla123_123bla_434bla")
+
+  expect_equal(to_any_case("123bla123_123bla_434bla", 
+                           numerals = "middle"),
+               "123_bla_123_123_bla_434_bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla", numerals = "asis"),
+               "123bla123_123bla_434bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla",
+                           numerals = "left"),
+               "123_bla123_123_bla434_bla")
+  
+  expect_equal(to_any_case("123bla123_123bla_434bla",
+                           numerals = "right"),
+               "123bla_123_123bla_434bla")
+  
+  expect_equal(to_snake_case("species42value 23month",
+                             parsing_option = 4),
+               "species42value_23month")
+  
+  expect_equal(to_any_case("species42value 23month",
+                           numerals = "asis"),
+               "species42value_23month")
+  
+  expect_equal(to_any_case(c("HHcity", "IDtable1", "KEYtable2", "newUSelections"),
+                           parsing_option = 2,
+                           numerals = "middle"),
+               c("hh_city", "id_table_1", "key_table_2", "new_us_elections"))
+  
+  expect_equal(to_any_case(c("HHcity", "IDtable1", "KEYtable2", "newUSelections"),
+                           parsing_option = 2, 
+                           numerals = "asis"),
+               c("hh_city","id_table1", "key_table2", "new_us_elections"))
+  
+  expect_equal(to_any_case(c("HHcity", "IDtable1", "KEYtable2", "newUSelections"), parsing_option = 2, numerals = "left"),
+               c("hh_city", "id_table1", "key_table2","new_us_elections"))
+
+  expect_equal(to_any_case(c("HHcity", "IDtable1", "KEYtable2", "newUSelections"),
+                           parsing_option = 2,
+                           numerals = "right"),
+               c("hh_city", "id_table_1", "key_table_2",
+                 "new_us_elections"))
+})
+
 test_that("preserve-names-attribute", {
   
   labs <- c(a = "abcDEF", b = "bbccEE", c = "TeESt it")
@@ -108,6 +245,24 @@ test_that("preserve-names-attribute", {
     to_any_case(labs, case = "lower_upper"),
     structure(c("abcDEF", "bbccEE", "teEstIT"), .Names = c("a", "b", "c"))
     )
+})
+
+test_that("uniqe_sep", {
+  expect_equal(
+    to_any_case(c("bla", "bla"), unique_sep = "_"),
+    c("bla",   "bla_1")
+  )
+  
+  expect_equal(
+    to_any_case(c("bla", "bla"), unique_sep = NULL),
+    c("bla", "bla")
+  )
+})
+
+test_that("sentence_case", {
+  expect_equal(
+  to_sentence_case("this_is_a_sentence", sep_out = " ", postfix = "."),
+  "This is a sentence.")
 })
 
 test_that("janitor-pkg-tests",{
@@ -236,16 +391,29 @@ test_that("random examples",
 #           expect_warning(to_any_case("bla", protect = "_"),
 #                          "argument protect is deprecated; If you really need this argument, pls submit an issue on https://github.com/Tazinho/snakecase")
 #           )
+
+test_that("transliterations", {
+  
+  expect_equal(to_any_case("Älterer Herr", transliterations = c("german", "Herr" = "Mann")), "aelterer_mann")
+  
+  expect_equal(
+    to_any_case("Älterer Herr", transliterations = c( "Herr" = "Mann", "german")),
+    "aelterer_mann")
+})
+
 test_that("transliterations_error", 
           expect_error(to_any_case("bla", transliterations = "bla"),
-                       "Input to `transliterations` must be `NULL` or a string containing elements
-               from the internal lookup dictionaries or from `stringi::stri_trans_list()`.",
+                       "Input to `transliterations` must be `NULL`, a string containing elements from the internal lookup dictionaries or from `stringi::stri_trans_list()` or a named vector.",
                        fixed = TRUE))
 
 test_that("empty_fill",
           expect_equal(to_any_case("", empty_fill = "bla"),
           "bla"))
 
+test_that("sentence",
+          expect_equal(to_any_case("bla bla_bal", case = "sentence"),
+                       "Bla bla bal"))
+  
 test_that("flip and swap", {
           expect_equal(to_any_case("rSTUDIO", case = "flip"), "Rstudio")
           
@@ -346,6 +514,41 @@ test_that("complex strings", {
   
   expect_equal(to_any_case("ac\u00C4o", transliterations = c("german", "Latin-ASCII")),
                "ac_aeo")
+  #
+  expect_equal(to_any_case("\u00C6", transliterations = c("danish", "Latin-ASCII")),
+               "ae")
+  expect_equal(to_any_case("\u00E6", transliterations = c("danish", "Latin-ASCII")),
+               "ae")
+  expect_equal(to_any_case("\u00D8", transliterations = c("danish", "Latin-ASCII")),
+               "oe")
+  expect_equal(to_any_case("\u00F8", transliterations = c("danish", "Latin-ASCII")),
+               "oe")
+  expect_equal(to_any_case("\u00C5", transliterations = c("danish", "Latin-ASCII")),
+               "aa")
+  expect_equal(to_any_case("\u00E5", transliterations = c("danish", "Latin-ASCII")),
+               "aa")
+  
+  expect_equal(to_any_case("\u00C6", transliterations = c("finnish", "Latin-ASCII")),
+               "a")
+  expect_equal(to_any_case("\u00E6", transliterations = c("finnish", "Latin-ASCII")),
+               "a")
+  expect_equal(to_any_case("\u00D8", transliterations = c("finnish", "Latin-ASCII")),
+               "o")
+  expect_equal(to_any_case("\u00F8", transliterations = c("finnish", "Latin-ASCII")),
+               "o")
+  
+  expect_equal(to_any_case("\u00C6", transliterations = c("swedish")),
+               "a")
+  expect_equal(to_any_case("\u00E6", transliterations = c("swedish")),
+               "a")
+  expect_equal(to_any_case("\u00D8", transliterations = c("swedish")),
+               "o")
+  expect_equal(to_any_case("\u00F8", transliterations = c("swedish")),
+               "o")
+  expect_equal(to_any_case("\u00C5", transliterations = c("swedish")),
+               "a")
+  expect_equal(to_any_case("\u00E5", transliterations = c("swedish")),
+               "a")
   
   expect_equal(to_any_case("\u00E6", transliterations = "Latin-ASCII"),
                 "ae")

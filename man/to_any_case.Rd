@@ -5,11 +5,13 @@
 \title{General case conversion}
 \usage{
 to_any_case(string, case = c("snake", "small_camel", "big_camel",
-  "screaming_snake", "parsed", "mixed", "lower_upper", "upper_lower", "swap",
-  "all_caps", "lower_camel", "upper_camel", "internal_parsing", "none", "flip"),
-  abbreviations = NULL, sep_in = "[^[:alnum:]]", parsing_option = 1,
-  transliterations = NULL, sep_out = NULL, unique_sep = NULL,
-  empty_fill = NULL, prefix = "", postfix = "")
+  "screaming_snake", "parsed", "mixed", "lower_upper", "upper_lower",
+  "swap", "all_caps", "lower_camel", "upper_camel", "internal_parsing",
+  "none", "flip", "sentence"), abbreviations = NULL,
+  sep_in = "[^[:alnum:]]", parsing_option = 1,
+  transliterations = NULL, numerals = c("middle", "left", "right",
+  "asis"), sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
+  prefix = "", postfix = "")
 }
 \arguments{
 \item{string}{A string (for example names of a data frame).}
@@ -22,6 +24,7 @@ to_any_case(string, case = c("snake", "small_camel", "big_camel",
  \item{ALL_CAPS: \code{"all_caps"} or \code{"screaming_snake"}}
  \item{lowerUPPER: \code{"lower_upper"}}
  \item{UPPERlower: \code{"upper_lower"}}
+ \item{Sentence case: \code{"sentence"}}
  }
 
  There are five "special" cases available:
@@ -37,7 +40,7 @@ to_any_case(string, case = c("snake", "small_camel", "big_camel",
  Doesn't work with any of the other arguments except \code{unique_sep}, \code{empty_fill}, \code{prefix} and \code{postfix}.}
  \item{\code{"none"}: Neither parsing nor case conversion occur. This case might be helpful, when
  one wants to call the function for the quick usage of the other parameters.
- To suppress replacement of spaces to underscores set \code{sep_out = NULL}.
+ To suppress replacement of spaces to underscores set \code{sep_in = NULL}.
  Works with \code{sep_in}, \code{transliterations}, \code{sep_out}, \code{prefix},
   \code{postfix},
   \code{empty_fill} and \code{unique_sep}.}
@@ -73,12 +76,13 @@ the strings into substrings and specify the word boundaries.}
 need to be elements of \code{stringi::stri_trans_list()} (like "Latin-ASCII", which is often useful) or names of lookup tables (currently
 only "german" is supported). In the order of the entries the letters of the input
  string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
- matches of the lookup table.
- 
+ matches of the lookup table. When named character elements are supplied as part of `transliterations`, anything that matches the names is replaced by the corresponding value.
 You should use this feature with care in case of \code{case = "parsed"}, \code{case = "internal_parsing"} and 
 \code{case = "none"}, since for upper case letters, which have transliterations/replacements
  of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
- might not always be what is intended.}
+ might not always be what is intended. In this case you can make usage of the option to supply named elements and specify the transliterations yourself.}
+
+\item{numerals}{A character specifying the alignment of numerals (\code{"middle"}, \code{left}, \code{right} or \code{asis}). I.e. \code{numerals = "left"} ensures that no output separator is in front of a digit.}
 
 \item{sep_out}{(short for separator output) String that will be used as separator. The defaults are \code{"_"} 
 and \code{""}, regarding the specified \code{case}.}
@@ -114,6 +118,7 @@ to_any_case(strings, case = "upper_camel") # same as "big_camel"
 to_any_case(strings, case = "all_caps") # same as "screaming_snake"
 to_any_case(strings, case = "lower_upper")
 to_any_case(strings, case = "upper_lower")
+to_any_case(strings, case = "sentence")
 to_any_case(strings, case = "parsed")
 to_any_case(strings, case = "mixed")
 to_any_case(strings, case = "internal_parsing")

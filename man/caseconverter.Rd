@@ -11,44 +11,58 @@
 \alias{to_lower_upper_case}
 \alias{to_upper_lower_case}
 \alias{to_swap_case}
+\alias{to_sentence_case}
 \title{Specific case converter shortcuts}
 \usage{
 to_snake_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
-  parsing_option = 1, transliterations = NULL, sep_out = NULL,
+  parsing_option = 1, transliterations = NULL, numerals = "middle",
+  sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
+  prefix = "", postfix = "")
+
+to_lower_camel_case(string, abbreviations = NULL,
+  sep_in = "[^[:alnum:]]", parsing_option = 1,
+  transliterations = NULL, numerals = "middle", sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
-to_lower_camel_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
-  parsing_option = 1, transliterations = NULL, sep_out = NULL,
-  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
-
-to_upper_camel_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
-  parsing_option = 1, transliterations = NULL, sep_out = NULL,
+to_upper_camel_case(string, abbreviations = NULL,
+  sep_in = "[^[:alnum:]]", parsing_option = 1,
+  transliterations = NULL, numerals = "middle", sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_screaming_snake_case(string, abbreviations = NULL,
-  sep_in = "[^[:alnum:]]", parsing_option = 1, transliterations = NULL,
-  sep_out = NULL, unique_sep = NULL, empty_fill = NULL, prefix = "",
-  postfix = "")
+  sep_in = "[^[:alnum:]]", parsing_option = 1,
+  transliterations = NULL, numerals = "middle", sep_out = NULL,
+  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_parsed_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
-  parsing_option = 1, transliterations = NULL, sep_out = NULL,
-  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
+  parsing_option = 1, transliterations = NULL, numerals = "middle",
+  sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
+  prefix = "", postfix = "")
 
 to_mixed_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
-  parsing_option = 1, transliterations = NULL, sep_out = NULL,
+  parsing_option = 1, transliterations = NULL, numerals = "middle",
+  sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
+  prefix = "", postfix = "")
+
+to_lower_upper_case(string, abbreviations = NULL,
+  sep_in = "[^[:alnum:]]", parsing_option = 1,
+  transliterations = NULL, numerals = "middle", sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
-to_lower_upper_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
-  parsing_option = 1, transliterations = NULL, sep_out = NULL,
-  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
-
-to_upper_lower_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
-  parsing_option = 1, transliterations = NULL, sep_out = NULL,
+to_upper_lower_case(string, abbreviations = NULL,
+  sep_in = "[^[:alnum:]]", parsing_option = 1,
+  transliterations = NULL, numerals = "middle", sep_out = NULL,
   unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
 
 to_swap_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
-  parsing_option = 1, transliterations = NULL, sep_out = NULL,
-  unique_sep = NULL, empty_fill = NULL, prefix = "", postfix = "")
+  parsing_option = 1, transliterations = NULL, numerals = "middle",
+  sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
+  prefix = "", postfix = "")
+
+to_sentence_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
+  parsing_option = 1, transliterations = NULL, numerals = "middle",
+  sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
+  prefix = "", postfix = "")
 }
 \arguments{
 \item{string}{A string (for example names of a data frame).}
@@ -80,12 +94,13 @@ the strings into substrings and specify the word boundaries.}
 need to be elements of \code{stringi::stri_trans_list()} (like "Latin-ASCII", which is often useful) or names of lookup tables (currently
 only "german" is supported). In the order of the entries the letters of the input
  string will be transliterated via \code{stringi::stri_trans_general()} or replaced via the 
- matches of the lookup table.
- 
+ matches of the lookup table. When named character elements are supplied as part of `transliterations`, anything that matches the names is replaced by the corresponding value.
 You should use this feature with care in case of \code{case = "parsed"}, \code{case = "internal_parsing"} and 
 \code{case = "none"}, since for upper case letters, which have transliterations/replacements
  of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
- might not always be what is intended.}
+ might not always be what is intended. In this case you can make usage of the option to supply named elements and specify the transliterations yourself.}
+
+\item{numerals}{A character specifying the alignment of numerals (\code{"middle"}, \code{left}, \code{right} or \code{asis}). I.e. \code{numerals = "left"} ensures that no output separator is in front of a digit.}
 
 \item{sep_out}{(short for separator output) String that will be used as separator. The defaults are \code{"_"} 
 and \code{""}, regarding the specified \code{case}.}
@@ -126,6 +141,7 @@ to_upper_lower_case(strings)
 to_parsed_case(strings)
 to_mixed_case(strings)
 to_swap_case(strings)
+to_sentence_case(strings)
 
 
 }
