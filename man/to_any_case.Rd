@@ -7,11 +7,11 @@
 to_any_case(string, case = c("snake", "small_camel", "big_camel",
   "screaming_snake", "parsed", "mixed", "lower_upper", "upper_lower",
   "swap", "all_caps", "lower_camel", "upper_camel", "internal_parsing",
-  "none", "flip", "sentence"), abbreviations = NULL,
+  "none", "flip", "sentence", "random", "title"), abbreviations = NULL,
   sep_in = "[^[:alnum:]]", parsing_option = 1,
   transliterations = NULL, numerals = c("middle", "left", "right",
-  "asis"), sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
-  prefix = "", postfix = "")
+  "asis", "tight"), sep_out = NULL, unique_sep = NULL,
+  empty_fill = NULL, prefix = "", postfix = "")
 }
 \arguments{
 \item{string}{A string (for example names of a data frame).}
@@ -25,6 +25,7 @@ to_any_case(string, case = c("snake", "small_camel", "big_camel",
  \item{lowerUPPER: \code{"lower_upper"}}
  \item{UPPERlower: \code{"upper_lower"}}
  \item{Sentence case: \code{"sentence"}}
+ \item{Title Case: \code{"title"} - This one is basically the same as "parsed" case below, but in addition it is wrapped into \code{tools::toTitleCase}.}
  }
 
  There are five "special" cases available:
@@ -38,6 +39,7 @@ to_any_case(string, case = c("snake", "small_camel", "big_camel",
  or behind an underscore is turned into lowercase. If a substring is set as an abbreviation, it will stay in upper case.}
  \item{\code{"swap"}: Upper case letters will be turned into lower case and vice versa. Also \code{case = "flip"} will work.
  Doesn't work with any of the other arguments except \code{unique_sep}, \code{empty_fill}, \code{prefix} and \code{postfix}.}
+ \item{\code{"random"}: Each letter will be randomly turned into lower or upper case. Doesn't work with any of the other arguments except \code{unique_sep}, \code{empty_fill}, \code{prefix} and \code{postfix}.}
  \item{\code{"none"}: Neither parsing nor case conversion occur. This case might be helpful, when
  one wants to call the function for the quick usage of the other parameters.
  To suppress replacement of spaces to underscores set \code{sep_in = NULL}.
@@ -66,9 +68,7 @@ the strings into substrings and specify the word boundaries.}
 \itemize{
  \item{1: \code{RRRStudio -> RRR_Studio}}
  \item{2: \code{RRRStudio -> RRRS_tudio}}
- \item{3: This \code{parsing_option} will suppress the conversion after non-alphanumeric
- values. See examples.}
- \item{4: digits directly behind/in front non-digits, will stay as is.}
+ \item{3: This \code{parsing_option} will suppress the conversion after non-alphanumeric values. See examples.}
  \item{any other integer <= 0: no parsing"}
  }}
 
@@ -82,10 +82,10 @@ You should use this feature with care in case of \code{case = "parsed"}, \code{c
  of length 2, the second letter will be transliterated to lowercase, for example Oe, Ae, Ss, which
  might not always be what is intended. In this case you can make usage of the option to supply named elements and specify the transliterations yourself.}
 
-\item{numerals}{A character specifying the alignment of numerals (\code{"middle"}, \code{left}, \code{right} or \code{asis}). I.e. \code{numerals = "left"} ensures that no output separator is in front of a digit.}
+\item{numerals}{A character specifying the alignment of numerals (\code{"middle"}, \code{left}, \code{right}, \code{asis} or \code{tight}). I.e. \code{numerals = "left"} ensures that no output separator is in front of a digit.}
 
 \item{sep_out}{(short for separator output) String that will be used as separator. The defaults are \code{"_"} 
-and \code{""}, regarding the specified \code{case}.}
+and \code{""}, regarding the specified \code{case}. When \code{length(sep_out) > 1}, the last element of \code{sep_out} gets recycled and separators are incorporated per string according to their order.}
 
 \item{unique_sep}{A string. If not \code{NULL}, then duplicated names will get 
 a suffix integer
@@ -133,8 +133,8 @@ to_any_case("HAMBURGcity", case = "parsed", parsing_option = 2)
 # This option (3) suppresses this behaviour
 to_any_case("blaBla.bla", case = "big_camel", parsing_option = 3)
 # Numbers are always separated from characters via an underscore. 
-# To suppress this behaviour choose parsing_option 4
-snakecase::to_any_case("d3 library", case = "upper_camel", parsing_option = 4, sep_out = " ")
+# To suppress this behaviour choose \\code{numerals = "tight"}
+to_any_case("d3 library", case = "upper_camel", sep_out = " ", numerals = "tight")
 # there might be reasons to suppress the parsing, while choosing neither one or two
 to_any_case("HAMBURGcity", case = "parsed", parsing_option = 0)
 

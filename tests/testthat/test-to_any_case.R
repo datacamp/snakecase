@@ -60,6 +60,12 @@ test_that("examples", {
   }
 )
 
+test_that("numerals_tight",
+          {
+            expect_equal(to_any_case("bla_la_123_123_1_bla", numerals = "tight"),
+                         "bla_la123_123_1bla")
+          })
+
 test_that("attributes", {
   expect_equal(
     {strings <- c("this Is a Strange_string", "AND THIS ANOTHER_One");
@@ -169,10 +175,6 @@ test_that("numerals", {
                            numerals = "right"),
                "123bla_123_123bla_434bla")
   
-  expect_equal(to_snake_case("species42value 23month",
-                             parsing_option = 4),
-               "species42value_23month")
-  
   expect_equal(to_any_case("species42value 23month",
                            numerals = "asis"),
                "species42value_23month")
@@ -266,6 +268,8 @@ test_that("sentence_case", {
 })
 
 test_that("janitor-pkg-tests",{
+  skip_if_not( l10n_info()$`UTF-8`)
+  
   clean_names3 <- function(old_names, case = "snake"){
     new_names <- gsub("'", "", old_names) # remove quotation marks
     new_names <- gsub("\"", "", new_names) # remove quotation marks
@@ -394,6 +398,8 @@ test_that("random examples",
 
 test_that("transliterations", {
   
+  skip_if_not( l10n_info()$`UTF-8`)
+  
   expect_equal(to_any_case("Älterer Herr", transliterations = c("german", "Herr" = "Mann")), "aelterer_mann")
   
   expect_equal(
@@ -421,6 +427,9 @@ test_that("flip and swap", {
 })
 
 test_that("complex strings", {
+  
+  skip_if_not( l10n_info()$`UTF-8`)
+  
   strings2 <- c("this - Is_-: a Strange_string", "\u00C4ND THIS ANOTHER_One")
   
   expect_equal(to_any_case(strings2, case = "snake", sep_in = "-|\\:"),
@@ -588,14 +597,11 @@ test_that("complex strings", {
   expect_equal(to_any_case("some11 21 31numbers_11 21 32_With11 11_diffs11 22 d", case = "lower_upper"),
                "some11_21_31NUMBERS11_21_32with11_11DIFFS11_22d")
   
-  expect_equal(to_any_case("email22Version_33 test", parsing_option = 4),
-               "email22version_33_test")
-  
 })
 
 
 test_that("stackoverflow answers", {
-  expect_equal(to_any_case(c("ThisText", "NextText"), case = "snake", sep_out = "\\."),
+  expect_equal(to_any_case(c("ThisText", "NextText"), case = "snake", sep_out = "."),
                c("this.text", "next.text"))
   
   expect_equal(to_any_case(c("BobDylanUSA",
@@ -887,3 +893,52 @@ test_that("expand.grid", {
                  "start.AGE.GROUP.end"))
   }
 )
+
+
+
+test_that("sep_out", {
+  paste_along <- function(x, along = "_") {
+    if (length(x) <= 1L) return(x)
+    if (length(along) == 1L) return(paste0(x, collapse = along))
+    
+    along <- c(along, rep_len(along[length(along)], max(length(x) - length(along), 0L)))
+    paste0(paste0(x[seq_len(length(x) - 1)], along[seq_len(length(x) - 1)],
+                  collapse = ""), x[length(x)])
+  }
+
+  expect_equal(to_any_case("a", sep_out = "-"), "a")
+  expect_equal(to_any_case(""), "")
+  expect_equal(to_any_case("a"), "a")
+  expect_equal(to_any_case(c("bla_bla_bla"), sep_out = c("-", "_")),  "bla-bla_bla")
+  
+  expect_equal(to_any_case(c("2018_01_01_bla_bla_bla"), sep_out = c("-", "_")), "2018-01_01_bla_bla_bla")
+  expect_equal(to_any_case(c("2018_01_01_bla_bla_bla"), sep_out = "-"), "2018-01-01-bla-bla-bla")
+  expect_equal(to_any_case(c("2018_01_01_bla_bla"), sep_out = c("-", "-", "_", "_", "_", "_", "_")),  "2018-01-01_bla_bla")
+  expect_equal(to_any_case(character(0), sep_out = c("_", "_")), character(0))
+})
+
+test_that("random case", {
+  expect_equal(
+    {suppressWarnings(RNGversion("3.1")); set.seed(123); to_any_case("almost RANDOM", case = "random")},
+    "AlMosT raNdOm"
+    )
+})
+
+test_that("title case", {
+  expect_equal(
+    to_any_case(c("on_andOn", "AndON", " and on", "and so on", "seems like it works", "also abbreviations ETC"), case = "title", abbreviations = "ETC"),
+    c("On and on", "And on", "And on", "And so on", "Seems Like it Works", "also Abbreviations ETC") 
+  )
+})
+
+test_that("case none", {
+  expect_equal(
+    to_any_case(c("blabla", "blablub", "blaBlub"),case = "none", transliterations = c(blab = "blub")),
+    c("blubla", "blublub", "blaBlub") 
+  )
+})
+
+test_that("special_input", {
+  expect_identical(to_any_case(NA_character_), NA_character_)
+  expect_equal(to_any_case(character(0)), character(0))
+})

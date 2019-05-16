@@ -12,6 +12,8 @@
 \alias{to_upper_lower_case}
 \alias{to_swap_case}
 \alias{to_sentence_case}
+\alias{to_random_case}
+\alias{to_title_case}
 \title{Specific case converter shortcuts}
 \usage{
 to_snake_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
@@ -63,6 +65,16 @@ to_sentence_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
   parsing_option = 1, transliterations = NULL, numerals = "middle",
   sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
   prefix = "", postfix = "")
+
+to_random_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
+  parsing_option = 1, transliterations = NULL, numerals = "middle",
+  sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
+  prefix = "", postfix = "")
+
+to_title_case(string, abbreviations = NULL, sep_in = "[^[:alnum:]]",
+  parsing_option = 1, transliterations = NULL, numerals = "middle",
+  sep_out = NULL, unique_sep = NULL, empty_fill = NULL,
+  prefix = "", postfix = "")
 }
 \arguments{
 \item{string}{A string (for example names of a data frame).}
@@ -84,9 +96,7 @@ the strings into substrings and specify the word boundaries.}
 \itemize{
  \item{1: \code{RRRStudio -> RRR_Studio}}
  \item{2: \code{RRRStudio -> RRRS_tudio}}
- \item{3: This \code{parsing_option} will suppress the conversion after non-alphanumeric
- values. See examples.}
- \item{4: digits directly behind/in front non-digits, will stay as is.}
+ \item{3: This \code{parsing_option} will suppress the conversion after non-alphanumeric values. See examples.}
  \item{any other integer <= 0: no parsing"}
  }}
 
@@ -103,7 +113,7 @@ You should use this feature with care in case of \code{case = "parsed"}, \code{c
 \item{numerals}{A character specifying the alignment of numerals (\code{"middle"}, \code{left}, \code{right} or \code{asis}). I.e. \code{numerals = "left"} ensures that no output separator is in front of a digit.}
 
 \item{sep_out}{(short for separator output) String that will be used as separator. The defaults are \code{"_"} 
-and \code{""}, regarding the specified \code{case}.}
+and \code{""}, regarding the specified \code{case}. When \code{length(sep_out) > 1}, the last element of \code{sep_out} gets recycled and separators are incorporated per string according to their order.}
 
 \item{unique_sep}{A string. If not \code{NULL}, then duplicated names will get 
 a suffix integer
@@ -142,6 +152,8 @@ to_parsed_case(strings)
 to_mixed_case(strings)
 to_swap_case(strings)
 to_sentence_case(strings)
+to_random_case(strings)
+to_title_case(strings)
 
 
 }
