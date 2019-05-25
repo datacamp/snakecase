@@ -6,7 +6,7 @@ to_any_case("veryComplicatedString")
 to_any_case(names(iris), sep_in = "\\.", case = "upper_camel", sep_out = " ")
 
 ## ---- collapse = TRUE----------------------------------------------------
-to_any_case("Doppelg‰nger is originally german", 
+to_any_case("Doppelg√§nger is originally german", 
             transliterations = "german", case = "upper_camel")
 
 ## ---- collapse = TRUE----------------------------------------------------

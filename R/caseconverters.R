@@ -4,10 +4,9 @@
 #'
 #' @param string A string (for example names of a data frame).
 #'  
-#' @param abbreviations character with (uppercase) abbreviations. This marks
-#'  abbreviations with an underscore behind (in front of the parsing).
-#'  Useful if \code{parsing_option} 1 is needed, but some abbreviations within the string need \code{parsing_option} 2.
-#'  Use this feature with care: One letter abbreviations and abbreviations next to each other may not be handled correctly, since those cases would introduce ambiguity in parsing.
+#' @param abbreviations character. (Case insensitive) matched abbreviations are surrounded by underscores. In this way, they can get recognized by the parser. This is useful when e.g. \code{parsing_option} 1 is needed for the use case, but some abbreviations but some substrings would require \code{parsing_option} 2. Furthermore, this argument also specifies the formatting of abbreviations in the output for the cases title, mixed, lower and upper camel. E.g. for upper camel the first letter is always in upper case, but when the abbreviation is supplied in upper case, this will also be visible in the output.
+#'  
+#'  Use this feature with care: One letter abbreviations and abbreviations next to each other are hard to read and also not easy to parse for further processing.
 #'  
 #' @param sep_in (short for separator input) if character, is interpreted as a
 #'  regular expression (wrapped internally into \code{stringr::regex()}). 
@@ -19,10 +18,11 @@
 #' 
 #' @param parsing_option An integer that will determine the parsing_option.
 #' \itemize{
-#'  \item{1: \code{RRRStudio -> RRR_Studio}}
-#'  \item{2: \code{RRRStudio -> RRRS_tudio}}
-#'  \item{3: This \code{parsing_option} will suppress the conversion after non-alphanumeric values. See examples.}
-#'  \item{any other integer <= 0: no parsing"}
+#'  \item{1: \code{"RRRStudio" -> "RRR_Studio"}}
+#'  \item{2: \code{"RRRStudio" -> "RRRS_tudio"}}
+#'  \item{3: \code{"RRRStudio" -> "RRRSStudio"}. This will become for example \code{"Rrrstudio"} when we convert to lower camel case.}
+#'  \item{-1, -2, -3: These \code{parsing_options}'s will suppress the conversion after non-alphanumeric values.}
+#'  \item{0: no parsing}
 #'  }
 #' 
 #' @param transliterations A character vector (if not \code{NULL}). The entries of this argument

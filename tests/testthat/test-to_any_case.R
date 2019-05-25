@@ -274,10 +274,11 @@ test_that("janitor-pkg-tests",{
     new_names <- gsub("'", "", old_names) # remove quotation marks
     new_names <- gsub("\"", "", new_names) # remove quotation marks
     new_names <- gsub("%", ".percent_", new_names)
-    new_names <- gsub("^[ ]+", "", new_names)
+    new_names <- gsub("#", ".number_", new_names)
+    new_names <- gsub("^[[:space:][:punct:]]+", "", new_names)
     new_names <- make.names(new_names)
     new_names <- to_any_case(new_names, case = case, sep_in = "\\.", 
-                  transliterations = c("Latin-ASCII"))
+                  transliterations = c("Latin-ASCII"), parsing_option = 1, numerals = "asis")
     # Handle duplicated names - they mess up dplyr pipelines
     # This appends the column number to repeated instances of duplicate variable names
     dupe_count <- vapply(1:length(new_names), function(i) { 
@@ -289,14 +290,14 @@ test_that("janitor-pkg-tests",{
     new_names
   }
   
-  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**^@", "%", "*",
                  "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
                  "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143")),
                c("sp_ace", "repeated", "a", "percent", "x", "x_2", "d_9", "repeated_2", 
                  "cant", "hi_there", "leading_spaces", "x_3", "acao", "faroe", 
                  "r_studio_v_1_0_143"))
   
-  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**^@", "%", "*",
                               "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
                               "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
                             case = "parsed"),
@@ -304,7 +305,7 @@ test_that("janitor-pkg-tests",{
                  "cant", "hi_there", "leading_spaces", "X_3", "acao", "faroe", 
                  "r_studio_v_1_0_143"))
   
-  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**^@", "%", "*",
                               "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
                               "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
                             case = "screaming_snake"),
@@ -313,7 +314,7 @@ test_that("janitor-pkg-tests",{
                  "R_STUDIO_V_1_0_143")
   )
   
-  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**^@", "%", "*",
                               "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
                               "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
                             case = "small_camel"),
@@ -322,7 +323,7 @@ test_that("janitor-pkg-tests",{
                )
   )
   
-  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**^@", "%", "*",
                               "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
                               "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
                             case = "big_camel"),
@@ -331,7 +332,7 @@ test_that("janitor-pkg-tests",{
                )
   )
   
-  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**^@", "%", "*",
                               "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
                               "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
                             case = "lower_upper"),
@@ -340,7 +341,7 @@ test_that("janitor-pkg-tests",{
                )
   )
   
-  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**^@", "%", "*",
                               "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
                               "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
                             case = "upper_lower"),
@@ -349,7 +350,7 @@ test_that("janitor-pkg-tests",{
                )
   )
   
-  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%", "#",
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**^@", "%", "*",
                               "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
                               "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
                             case = "mixed"),
@@ -358,10 +359,9 @@ test_that("janitor-pkg-tests",{
                  "r_studio_v_1_0_143")
   )
   
-  expect_equal(clean_names3(c("sp ace", "repeated", "a**#@", "%",
-                              "#", "!", "d(!)9", "REPEATED",
-                              "can\"'t", "hi_`there`", "  leading spaces", "\u20AC",
-                              "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
+  expect_equal(clean_names3(c("sp ace", "repeated", "a**^@", "%", "*",
+                              "!", "d(!)9", "REPEATED", "can\"'t", "hi_`there`",
+                              "  leading spaces", "\u20AC", "a\u00E7\u00E3o", "far\u0153", "r.st\u00FCdio:v.1.0.143"),
                             case = "none"),
                c("sp_ace", "repeated", "a", "percent",
                  "X", "X_2", "d_9", "REPEATED",
@@ -566,7 +566,7 @@ test_that("complex strings", {
                "bla_bla")
   
   expect_equal(to_any_case("blaUSABlaGERBlaZDFBla", abbreviations = c("USA", "GER", "ZDF", "BLA"), case = "mixed"),
-               "bla_USA_Bla_GER_Bla_ZDF_Bla")
+               "BLA_USA_BLA_GER_BLA_ZDF_BLA")
   
   expect_equal(to_any_case("someUSPeople", abbreviations = "US", case = "mixed", sep_out = " "),
                "some US People")
@@ -927,7 +927,7 @@ test_that("random case", {
 test_that("title case", {
   expect_equal(
     to_any_case(c("on_andOn", "AndON", " and on", "and so on", "seems like it works", "also abbreviations ETC"), case = "title", abbreviations = "ETC"),
-    c("On and on", "And on", "And on", "And so on", "Seems Like it Works", "also Abbreviations ETC") 
+    c("On and on", "And on", "And on", "And so on", "Seems Like it Works", "Also Abbreviations ETC") 
   )
 })
 
@@ -941,4 +941,215 @@ test_that("case none", {
 test_that("special_input", {
   expect_identical(to_any_case(NA_character_), NA_character_)
   expect_equal(to_any_case(character(0)), character(0))
+})
+
+test_that("special_input_2", {
+  skip_if(getRversion() < 3.4)
+  # atomics
+  expect_equal(to_any_case(character()), character())
+  expect_error(to_any_case(logical()), "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(integer()), "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(double()), "argument is not a character vector", fixed = TRUE)
+  # data structures
+  expect_error(to_any_case(data.frame()), "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(list())      , "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(matrix())    , "argument is not a character vector", fixed = TRUE)
+  # special input or wrong type
+  expect_error(to_any_case(NA)    , "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(NA_integer_)    , "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(NA_real_)    , "argument is not a character vector", fixed = TRUE)
+  expect_equal(to_any_case(NA_character_)    , NA_character_)
+
+  expect_error(to_any_case(TRUE)    , "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(1.0)    , "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(1L)    , "argument is not a character vector", fixed = TRUE)
+  expect_equal(to_any_case(c("a", 1L))    , c("a", "1"))
+  
+  expect_error(to_any_case(NULL)    , "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(NaN)    , "argument is not a character vector", fixed = TRUE)
+  expect_error(to_any_case(Inf)    , "argument is not a character vector", fixed = TRUE)
+  })
+
+test_that("abbreviations", {
+  expect_equal(to_any_case("IDENTICALid3", abbreviations = "iD3"), "identical_id3")
+})
+
+test_that("parsing_options", {
+  
+  expect_equal(to_any_case("RRRStudioSStudioStudio", case = "parsed", parsing_option = 1),
+               "RRR_Studio_S_Studio_Studio"
+               )
+  
+  expect_equal(to_any_case("RRRStudioSStudioStudio", case = "parsed", parsing_option = -1),
+               "RRR_Studio_S_Studio_Studio"
+               )
+  
+  expect_equal(to_any_case("RRRStudioSStudioStudio", case = "parsed", parsing_option = 2),
+              "RRRS_tudio_SS_tudio_Studio"
+              )
+  
+  expect_equal(to_any_case("RRRStudioSStudioStudio", case = "parsed", parsing_option = -2),
+               "RRRS_tudio_SS_tudio_Studio"
+               )
+  
+  expect_equal(to_any_case("RRRStudioSStudioStudio", case = "parsed", parsing_option = 3),
+               "RRRStudio_SStudio_Studio"
+               )
+  
+  expect_equal(to_any_case("RRRStudioSStudioStudio", case = "parsed", parsing_option = -3),
+               "RRRStudio_SStudio_Studio"
+               )
+})
+
+test_that("individual abbreviations", {
+  
+  expect_equal(
+    to_any_case("NBAGame", abbreviations = "NBA", case = "mixed"),
+    "NBA_Game"
+  )
+  
+  expect_equal(
+    to_any_case("NBAGame", abbreviations = "NBa", case = "mixed"),
+    "NBa_Game"
+  )
+  
+  expect_equal(
+    to_any_case("NBAGame", abbreviations = "baa", case = "mixed"),
+    "Nba_Game"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "MVP", case = "mixed"),
+    "Game_MVP"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "MVp", case = "mixed"),
+    "Game_MVp"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "mvp", case = "mixed"),
+    "Game_mvp"
+  )
+  
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "mvp", case = "upper_camel"),
+    "GameMvp"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "MVP", case = "upper_camel"),
+    "GameMVP"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "MVp", case = "upper_camel"),
+    "GameMVp"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "mvp", case = "title"),
+    "Game Mvp"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "MVP", case = "title"),
+    "Game MVP"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "MVp", case = "title"),
+    "Game MVp"
+  )
+  
+  expect_equal(
+    to_any_case("UserID", abbreviations = "id", case = "title"),
+    "User Id"
+  )
+
+  expect_equal(
+    to_any_case("UserID", abbreviations = "ID", case = "title"),
+    "User ID"
+  )
+  
+  expect_equal(
+    to_any_case("UserID", abbreviations = "id", case = "upper_camel"),
+    "UserId"
+  )
+  
+  expect_equal(
+    to_any_case("UserID", abbreviations = "ID", case = "upper_camel"),
+    "UserID"
+  )
+  
+  expect_equal(
+    to_any_case("UserID", abbreviations = "id", case = "mixed"),
+    "User_id"
+  )
+  
+  expect_equal(
+    to_any_case("UserID", abbreviations = "ID", case= "mixed"),
+    "User_ID"
+  )
+  
+  expect_equal(
+    to_any_case("UserID", abbreviations = "Id", case = "mixed"),
+    "User_Id"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "mvp", case = "lower_camel"),
+    "gameMvp"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "MVP", case = "lower_camel"),
+    "gameMVP"
+  )
+
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "MVp", case = "lower_camel"),
+    "gameMVp"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "GAME", case = "lower_camel"),
+    "gameMvp"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "game", case = "lower_camel"),
+    "gameMvp"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "gGame", case = "lower_camel"),
+    "gameMvp"
+  )
+  
+  expect_equal(
+    to_any_case("GameMVP", abbreviations = "Game", case = "lower_camel"),
+    "gameMvp"
+    )
+  
+  expect_equal(
+    to_any_case("nba_finals_mvp", abbreviations = c("nba", "MVP"), case = "upper_camel"),
+    "NbaFinalsMVP"
+  )
+  
+  expect_equal(
+    to_any_case("nba_finals_mvp", abbreviations = c("nba", "MVp"), case = "upper_camel"),
+    "NbaFinalsMVp"
+  )
+})
+
+test_that("parsing_option 2", {
+  expect_equal(to_any_case("blaBLA", abbreviations = "BLA", parsing_option = 2),
+               "bla_bla")
+})
+test_that("parsing_option 3", {
+  expect_equal(to_any_case("blaBLA", abbreviations = "BLA", parsing_option = 3),
+               "bla_bla")
 })

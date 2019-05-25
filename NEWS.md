@@ -1,3 +1,48 @@
+# snakecase 0.11.0 (25.05.19)
+
+**Changes in 0.10.0 and 0.10.0.9000**
+
+New functionality:
+
+* **abbreviations**: Abbreviations are now ...
+  * ... matched case-insensitive inside of groups of connected lower/upper case sequences.
+  * ... consistently formatted according to the supplied case.
+  * ... formatted exactly as supplied for the cases title, mixed, lower and upper camel.
+  * ... protected from the parsing. This means that 
+    * special characters in abbreviations don't need to be taken care of anymore. The formatting of digits or special characters like hyphens, colons etc. will be formatted as specified. 
+* **parsing_option**: 
+  * new parsing option 3 parses "SOmeNIceSTUFf". 
+  * parsing options starting with a minus (-1, -2, -3) interprete non-alphanumeric characters as word boundaries. E.g. "This.text" will stay "This.text" in upper camel case.
+* **cases**
+  * **title**: New case which should be especially useful for automatic generation of proper labels within graphics or business reports. Builds up on sentence case which is wrapped within `tools::toTitleCase()`.
+  * **random**: New case, which will randomly convert letters into upper or lower case.
+* **numerals**: new alignment option `"tight"` which allows to suppress all underscores between numerals and letters.
+* **sep_out**: `sep_out` gets proper vectorization. In case of `length(sep_out) > 1` differing substrings are connected by the (possibly) differing elements of `sep_out`. Therefore, `sep_out` gets accordingly shortened or the last element of `sep_out` gets recycled to match the number of needed separators for each element of `string`.
+* **UTF8 Conversion**: Input is now always converted to UTF-8 and returned as UTF8. Also the `transliterations` argument is now aware of non-UTF8 encoded input.
+
+Infrastructure:
+
+* **CII best practices badge**: Achieved the criteria for the best practices badge. Current status is under https://bestpractices.coreinfrastructure.org/de/projects/2475  
+* **R Version**: Increase from 3.1 to 3.2 regarding the usage of `tools::toTitleCase()` inside `to_title_case()`.  
+* **Vignettes**: The blog article "Introducing the snakecase package" was added as a vignette.  
+* **Documentation**: The readme, the examples and the function documentation were updated according to the new functionality.
+* **Resolve CRAN notes**:
+  * **Tests**: Skip `to_any_case()` tests (janitor-pkg-tests, transliterations and complex strings) when platform charset is not UTF-8 to resolve CRAN notification regarding character encoding.
+  * **Vignettes**: Build the package with new version of knitr to resolve CRAN notification regarding vignette encoding.
+
+# snakecase 0.10.0.9000
+
+* **cases**: Title case now builds up on sentence case (instead of parsed_case).
+* **abbreviations**: Abbreviations are now
+  * matched case-insensitive
+  * formatted as they are supplied for title-, upper-camel-, lower-camel- and mixed case. Apart of that abbreviations are still formatted according to the specified case.
+    * protected from the parsing. This means that 
+    * special characters in abbreviations don't need to be excluded via a regex in the `sep_in` parameter
+    * the formatting of digits or special characters like hyphens, colons etc. will be formatted as specified. 
+* **parsing_option**: 
+  * new parsing option 3 implemented which parses "SOmeNIceSTUFf". 
+  * each parsing option can now be prefixed by a minus (-1, -2, -3). In this way
+
 # snakecase 0.10.0 (16.05.19)
 
 * CRAN release
@@ -17,7 +62,7 @@
 
 * **cases**: added `to_sentence_case()` (same as snake, but first letter is uppercase and default sep_out is space).
 * **numerals**: added `numerals` argument to all caseconverters including `to_any_case()` to format the alignment of digits (`middle`, `left`,`right`, `asis`). Therefore `parsing_option` nr 4 might be removed in later releases, as it is the same as `parsing_option = 1` and `numerals = "asis"`.
-* **transliterations**: When named character elements are supplied as part of `transliterations`, anything that mathches the name is replaced by the corresponding value.
+* **transliterations**: When named character elements are supplied as part of `transliterations`, anything that matches the name is replaced by the corresponding value.
 * attributes are now preserved (not only names as before)
 
 # snakecase 0.9.1
@@ -300,7 +345,7 @@ for whitespaces in output postprocess = " " is recommended.
 * introduced `to_screaming_snake_case()`
 * added arguments prefix, postfix and replace_special_characters to `to_any_case()`.
 * completely renewed readme
-* updated tests and highly modularized all tests. (just to_any_case lacks some tests now and in general more examples testcases have to be written)
+* updated tests and highly modularized all tests. (just to_any_case lacks some tests now and in general more examples test cases have to be written)
 
 # snakecase 0.2.2
 
@@ -320,7 +365,7 @@ the old name before, since the package was in early dev-stage anyway).
 * started a to develop and implement consistent logic (which still has to be better documented in the readme)
 * introduced tests for more hard coded examples and the logic behind it (still more
 hardcoded examples and a third part of the logic have to be tested)
-* internal logic has been simplified and modularised a lot, which makes it easier
+* internal logic has been simplified and modularized a lot, which makes it easier
 to maintain and introduce more high-level features in the future
 * added integrated tests via AppVeyor on windows
 * added badges for cran status and code coverage to readme
@@ -332,6 +377,3 @@ to maintain and introduce more high-level features in the future
 build up on `to_snake_case()` and convert to the appropriate target case.
 * added basic hard coded tests
 * added integrated tests on linux via travis.ci
-
-
-

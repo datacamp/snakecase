@@ -14,7 +14,7 @@
 
 <meta name="date" content="2019-05-25" />
 
-<title>Case converters</title>
+<title>Introducing the snakecase package</title>
 
 
 
@@ -301,34 +301,61 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 
 
-<h1 class="title toc-ignore">Case converters</h1>
+<h1 class="title toc-ignore">Introducing the snakecase package</h1>
 <h4 class="author">Malte Grosser</h4>
 <h4 class="date">2019-05-25</h4>
 
 
 
-<div id="basic-examples" class="section level2">
-<h2>Basic examples</h2>
-<p>Default case is snake case</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(snakecase)</a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="kw">to_any_case</span>(<span class="st">&quot;veryComplicatedString&quot;</span>)</a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="co">## [1] &quot;very_complicated_string&quot;</span></a></code></pre></div>
-<p>Of course other cases are supported (<code>case</code>) and separators can be adjusted (<code>sep_out</code>)</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">to_any_case</span>(<span class="kw">names</span>(iris), <span class="dt">sep_in =</span> <span class="st">&quot;</span><span class="ch">\\</span><span class="st">.&quot;</span>, <span class="dt">case =</span> <span class="st">&quot;upper_camel&quot;</span>, <span class="dt">sep_out =</span> <span class="st">&quot; &quot;</span>)</a>
-<a class="sourceLine" id="cb2-2" title="2"><span class="co">## [1] &quot;Sepal Length&quot; &quot;Sepal Width&quot;  &quot;Petal Length&quot; &quot;Petal Width&quot; </span></a>
-<a class="sourceLine" id="cb2-3" title="3"><span class="co">## [5] &quot;Species&quot;</span></a></code></pre></div>
-<p>And you might want to remove special characters along the way</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">to_any_case</span>(<span class="st">&quot;Doppelgänger is originally german&quot;</span>, </a>
-<a class="sourceLine" id="cb3-2" title="2">            <span class="dt">transliterations =</span> <span class="st">&quot;german&quot;</span>, <span class="dt">case =</span> <span class="st">&quot;upper_camel&quot;</span>)</a>
-<a class="sourceLine" id="cb3-3" title="3"><span class="co">## [1] &quot;DoppelgaengerIsOriginallyGerman&quot;</span></a></code></pre></div>
-<p>All of the cases like: snake, lower_camel, upper_camel, all_caps, lower_upper, upper_lower, mixed and sentence are based on parsed case</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">to_any_case</span>(<span class="st">&quot;THISIsHOW IAmPARSED!&quot;</span>, <span class="dt">case =</span> <span class="st">&quot;parsed&quot;</span>)</a>
-<a class="sourceLine" id="cb4-2" title="2"><span class="co">## [1] &quot;THIS_Is_HOW_I_Am_PARSED&quot;</span></a></code></pre></div>
-<p>Shortcut wrappers like <code>to_snake_case</code>, <code>to_lower_camel_case</code> etc. are available.</p>
-<p>Be aware that automatic case conversion depends on the input string and it is recommended to verify the results. So you might want to pipe these into <code>dput()</code> and hardcode name changes instead of blindly trusting <code>to_any_case()</code>’s output:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">dput</span>(<span class="kw">to_any_case</span>(<span class="kw">c</span>(<span class="st">&quot;SomeBAdInput&quot;</span>, <span class="st">&quot;someGoodInput&quot;</span>)))</a>
-<a class="sourceLine" id="cb5-2" title="2"><span class="co">## c(&quot;some_b_ad_input&quot;, &quot;some_good_input&quot;)</span></a></code></pre></div>
-<p>If you are interested in the design of this package, you can find more information on its <a href="https://github.com/Tazinho/snakecase">github page</a>.</p>
+<p>There are many style guides out there which recommend specific naming conventions for programming languages. At 2017’s useR conference Rasmus Bååth showed quite impressively the variety of cases which even exist within base R in his talk <a href="https://www.youtube.com/watch?v=Pv5dfsHBBKE">“The current state of naming conventions in R”</a>.</p>
+<p>However, consistent style is not only about naming new objects.</p>
+<div id="import" class="section level2">
+<h2>Import</h2>
+<p>When you do a data analysis, most of the data already exists and you import it from disk, an API or a database. Here is the first moment in your data analysis when you have to decide if you want to rename your data or leave it as it is.</p>
+<p>Let’s say you have some data named in any of the following conventions</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1">string &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;lowerCamelCase&quot;</span>, <span class="st">&quot;ALL_CAPS&quot;</span>, <span class="st">&quot;IDontKNOWWhat_thisCASE_is&quot;</span>)</a></code></pre></div>
+<p>You can now easily convert this string for example to snake case via</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">library</span>(snakecase)</a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="kw">to_snake_case</span>(string)</a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="co">#&gt; [1] &quot;lower_camel_case&quot;              &quot;all_caps&quot;                     </span></a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="co">#&gt; [3] &quot;i_dont_know_what_this_case_is&quot;</span></a></code></pre></div>
+</div>
+<div id="graphics" class="section level2">
+<h2>Graphics</h2>
+<p>Whenever you want to construct a graphic and you don’t like your conventions to come up in it, you can easily convert strings to a more humanly readable output like</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">to_mixed_case</span>(string, <span class="dt">sep_out =</span> <span class="st">&quot; &quot;</span>)</a>
+<a class="sourceLine" id="cb3-2" title="2"><span class="co">#&gt; [1] &quot;lower Camel Case&quot;              &quot;All Caps&quot;                     </span></a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="co">#&gt; [3] &quot;I Dont Know What this Case is&quot;</span></a></code></pre></div>
+<p>You might have noticed the <code>sep_out</code> argument. This allows you to combine any case with any output separator to create other well known cases like</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">to_snake_case</span>(string, <span class="dt">sep_out =</span> <span class="st">&quot;.&quot;</span>)</a>
+<a class="sourceLine" id="cb4-2" title="2"><span class="co">#&gt; [1] &quot;lower.camel.case&quot;              &quot;all.caps&quot;                     </span></a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="co">#&gt; [3] &quot;i.dont.know.what.this.case.is&quot;</span></a>
+<a class="sourceLine" id="cb4-4" title="4"><span class="kw">to_snake_case</span>(string, <span class="dt">sep_out =</span> <span class="st">&quot;-&quot;</span>)</a>
+<a class="sourceLine" id="cb4-5" title="5"><span class="co">#&gt; [1] &quot;lower-camel-case&quot;              &quot;all-caps&quot;                     </span></a>
+<a class="sourceLine" id="cb4-6" title="6"><span class="co">#&gt; [3] &quot;i-dont-know-what-this-case-is&quot;</span></a></code></pre></div>
+<p>or completely new ones like</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">to_screaming_snake_case</span>(string, <span class="dt">sep_out =</span> <span class="st">&quot;=&quot;</span>)</a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="co">#&gt; [1] &quot;LOWER=CAMEL=CASE&quot;              &quot;ALL=CAPS&quot;                     </span></a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="co">#&gt; [3] &quot;I=DONT=KNOW=WHAT=THIS=CASE=IS&quot;</span></a></code></pre></div>
+</div>
+<div id="export" class="section level2">
+<h2>Export</h2>
+<p>Finally, when you are done with your analysis and want to write data back into a .CSV file or your customers database, which has a camel case convention, you can just use</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">to_upper_camel_case</span>(string)</a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="co">#&gt; [1] &quot;LowerCamelCase&quot;          &quot;AllCaps&quot;                </span></a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="co">#&gt; [3] &quot;IDontKnowWhatThisCaseIs&quot;</span></a></code></pre></div>
+</div>
+<div id="further-information" class="section level2">
+<h2>Further information</h2>
+<p>The snakecase package goes quite deep into the little quirks which arise in automatic case conversion. However, it is well tweaked, to handle almost every edge case in an intuitive and elegant manner.</p>
+<p>To get a complete overview of its functionality like other cases, handling of abbreviations, special input characters, different parsing options, transliterations and more, I recommend you to have a look into the quite extensive <a href="https://github.com/Tazinho/snakecase">readme on its github repository</a>.</p>
+<p>As the package is relatively small and basically consists of its workhorse function <code>to_any_case()</code>, I can also react quite fast on new <a href="https://github.com/Tazinho/snakecase/issues">issues</a>.</p>
+<p>And of course I <a href="https://twitter.com/malte_grosser">tweet</a> occasionally about new functionality.</p>
+<p>To round this up let me give you one advice about best practices: be aware that automatic case conversion depends on the input string and it is recommended to verify the results. Hence you might want to pipe them into <code>dput()</code> and hard-code name changes instead of blindly trusting the output</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">library</span>(magrittr)</a>
+<a class="sourceLine" id="cb7-2" title="2"><span class="kw">to_any_case</span>(<span class="kw">c</span>(<span class="st">&quot;SomeBAdInput&quot;</span>, <span class="st">&quot;someGoodInput&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">dput</span>()</a>
+<a class="sourceLine" id="cb7-3" title="3"><span class="co">#&gt; c(&quot;some_b_ad_input&quot;, &quot;some_good_input&quot;)</span></a></code></pre></div>
+<p>Happy snakecasing everyone ;)</p>
 </div>
 
 
