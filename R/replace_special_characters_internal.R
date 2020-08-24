@@ -1,4 +1,4 @@
-#' Internal helper to replace special characters.
+#' Internal helper to replace special characters. This has been turned off in this fork.
 #'
 #' @param string A string (for example names of a data frame).
 #' @param transliterations A character vector (if not \code{NULL}). The entries of this argument
@@ -21,25 +21,10 @@
 #'
 replace_special_characters_internal <- function(string, transliterations, case){
   dictionary <- list(
-    german = c("\u00C4" = "Ae", "\u00D6" = "Oe", "\u00DC" = "Ue",
-               "\u00E4" = "ae", "\u00F6" = "oe", "\u00FC" = "ue",
-               "\u00DF" = "ss"),
-    danish = c("\u00C6" = "Ae",
-               "\u00E6" = "ae",
-               "\u00D8" = "Oe",
-               "\u00F8" = "oe",
-               "\u00C5" = "Aa",
-               "\u00E5" = "aa"),
-    finnish = c("\u00C6" = "A",
-               "\u00E6" = "a",
-               "\u00D8" = "O",
-               "\u00F8" = "o"),
-    swedish = c("\u00C6" = "A",
-                "\u00E6" = "a",
-                "\u00D8" = "O",
-                "\u00F8" = "o",
-                "\u00C5" = "A",
-                "\u00E5" = "a")
+    german = character(),
+    danish = character(),
+    finnish = character(),
+    swedish = character()
     )
   
   for (i in seq_along(transliterations)){
@@ -59,9 +44,5 @@ replace_special_characters_internal <- function(string, transliterations, case){
                   call. = FALSE)
       }
   }
-  # "\u0025" = "_percent_",
-    # "\\`" = "",
-    # "\\'" = "",
-    # "\\@" = "_at_")
   string
 }
